@@ -1,0 +1,35 @@
+suite: certificate ca override
+release:
+  name: release-name
+values:
+  - ../values-example.yaml
+templates:
+  - templates/AwacsEasyDomain.yaml
+tests:
+  - it: override certificate_ca for a single domain
+    set:
+      domains:
+        test1.taxi.tst.yandex.net:
+          shadow_fqdns:
+            - test1.taxi.tst.yandex.net
+          target_fqdn: api.taxi.tst.yandex.net
+          tvm_service_ticket: '2056065'
+          l7_upstream_template: common-one-attempt
+          certificate_ca: GLOBAL_SIGN_DV_PRODUCTION_CA
+    documentSelector:
+      path: metadata.name
+      value: test1.taxi.tst.yandex.net-90b19a18
+    asserts:
+      - equal:
+          path: spec.cert.ca
+          value: GLOBAL_SIGN_DV_PRODUCTION_CA
+  - it: override certificate_ca globally
+    set:
+      override_defaults.certificate_ca: GLOBAL_SIGN_PRODUCTION_CA
+    documentSelector:
+      path: metadata.name
+      value: test1.taxi.tst.yandex.net-90b19a18
+    asserts:
+      - equal:
+          path: spec.cert.ca
+          value: GLOBAL_SIGN_PRODUCTION_CA

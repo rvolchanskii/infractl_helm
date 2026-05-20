@@ -1,0 +1,150 @@
+ci:
+  permissions:
+    start-flow:
+      - service: experimental_projects_team
+        scope: administration
+      - service: vopstaxi
+        scope: administration
+
+  secret: sec-01jwe6ap1j949h6xft66rqj86b
+  runtime:
+    sandbox:
+      owner: TAXI-WORLD
+    tasklet:
+      account_name: /root/generic/quotastaxiinternational
+      requirements:
+        container:
+          network:
+            name: _TASKLETS_SERVICE_TAXI_WORLD_NETS_
+
+  actions:
+    helm-validate:
+      title: !evaluate Run helm lint & template for ${shared.balancer_name}
+      flow: helm-validate-flow
+      tags:
+        - ci-action
+      triggers:
+        - on: pr
+          on-demand: true
+          required: always
+          filters:
+            - sub-paths: &common_subpaths
+              - values.yaml
+            - abs-paths: &common_abspaths
+                - taxi/yango/infractl_helm/helm/charts/generic-proxy/**
+                - taxi/yango/infractl_helm/l7_upstream_templates/**
+                - taxi/yango/infractl_helm/balancer_config.yaml
+                - taxi/yango/infractl_helm/components.yaml
+    helm-diff:
+      title: !evaluate Run helm diff upgrade for ${shared.balancer_name}
+      flow: helm-diff-flow
+      triggers:
+        - on: pr
+          required: always
+          filters:
+            - sub-paths: *common_subpaths
+
+  releases:
+    helm-deploy:
+      title: !evaluate Deploy balancer ${shared.balancer_name}
+      flow: helm-deploy-balancer-flow
+      flow-vars:
+        manual_upgrade: false
+      auto: true
+      filters:
+        - sub-paths: *common_subpaths
+      notifications: &notifications
+        - statuses:
+            - SUCCESS
+            - FAILURE
+          recipients:
+            jns-project: taxis_rtc_over_aws
+            jns-channels:
+              - yango-cloud-infra-ci-notifications
+      link-to-tracker-issues:
+        queues:
+          - YANGOCLOUD
+          - TAXIADMIN
+    helm-full-deploy:
+      title: !evaluate Deploy balancer ${shared.balancer_name} with all dependencies and manual upgrade
+      flow: helm-deploy-balancer-flow
+      flow-vars:
+        manual_upgrade: true
+      filters:
+        - sub-paths: *common_subpaths
+        - abs-paths: *common_abspaths
+      notifications: *notifications
+
+  flows:
+    helm-validate-flow:
+      jobs:
+        lint: &lint_job
+          title: Lint
+          task: projects/taxi/world/helm_infractl_command_runner_lint
+          input: &lint_input
+            arc_token: &arc_token
+              id: sec-01jwe6ap1j949h6xft66rqj86b
+              key: arc.token
+            helm_infractl_common_options: &helm_infractl_common_options
+              namespace_name: !evaluate "${shared.namespace_name}"
+              balancer_name: !evaluate "${shared.balancer_name}"
+              project_folder: !evaluate "${shared.project_folder}"
+            helm_infractl_path: &helm_infractl_path
+              path: taxi/yango/infractl_helm/
+        template:
+          title: Template
+          task: projects/taxi/world/helm_infractl_command_runner_template
+          input: *lint_input
+          needs:
+            - lint
+          needs-type: all
+    helm-diff-flow:
+      jobs:
+        diff: &diff_job
+          title: Diff upgrade
+          task: projects/taxi/world/helm_infractl_command_runner_diff
+          input: &diff_input
+            arc_token: *arc_token
+            helm_infractl_common_options: *helm_infractl_common_options
+            helm_infractl_path: *helm_infractl_path
+            kubernetes_config: &kubernetes_config
+              k8s_api_token:
+                id: sec-01kagxaw99h8e953kjrb45jnbv
+                key: infractl.token
+              ca_certificate:
+                id: sec-01kagxaw99h8e953kjrb45jnbv
+                key: infractl.ca_certificate
+              kubeapiserver:
+                id: sec-01kagxaw99h8e953kjrb45jnbv
+                key: infractl.kubeapiserver
+          needs-type: all
+    helm-deploy-balancer-flow:
+      jobs:
+        lint: *lint_job
+        diff:
+          <<: *diff_job
+          needs:
+            - lint
+        upgrade:
+          title: Upgrade
+          task: projects/taxi/world/helm_infractl_command_runner_upgrade
+          if: ${tasks.diff.diff_log}
+          input: *diff_input
+          manual:
+            enabled: ${flow-vars.manual_upgrade}
+            prompt: !evaluate Запустить процесс полного обновления конфигурации балансера ${shared.balancer_name}?
+          needs:
+            - diff
+          needs-type: all
+        zerodiff:
+          title: Zerodiff
+          task: dummy
+          needs: diff
+          if: ${!tasks.diff.diff_log}
+        finish:
+          title: Finish
+          task: dummy
+          needs:
+            - upgrade
+            - zerodiff
+          needs-type: any-success

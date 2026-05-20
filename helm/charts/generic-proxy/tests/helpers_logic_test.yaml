@@ -1,0 +1,94 @@
+suite: helpers templates logic
+release:
+  name: release-name
+values:
+  - ../values-example.yaml
+templates:
+  - templates/AwacsBalancer.yaml
+  - templates/AwacsNamespace.yaml
+tests:
+  - it: default l7 location and ctype
+    template: templates/AwacsBalancer.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: release-name-448e71-test-ext
+      - equal:
+          path: spec.balancer_spec.config_transport.nanny_static_file.instance_tags.ctype
+          value: testing
+  - it: production l7 location and ctype
+    template: templates/AwacsBalancer.yaml
+    set:
+      environment: production
+    asserts:
+      - equal:
+          path: metadata.name
+          value: release-name-448e71-ext
+      - equal:
+          path: spec.balancer_spec.config_transport.nanny_static_file.instance_tags.ctype
+          value: prod
+  - it: override l7 balancer location
+    template: templates/AwacsBalancer.yaml
+    set:
+      environment: production
+      override_defaults.l7_balancer_location: custom
+    asserts:
+      - equal:
+          path: metadata.name
+          value: release-name-custom
+  - it: default projects and traffic source
+    template: templates/AwacsBalancer.yaml
+    asserts:
+      - equal:
+          path: spec.balancer_spec.deploy_project
+          value: quotastaxiinternational
+      - equal:
+          path: spec.balancer_spec.monitoring_settings.monitoring_project
+          value: quotastaxiinternational
+      - equal:
+          path: spec.balancer_spec.traffic_source
+          value: TS_DIRECT
+  - it: override projects and traffic source
+    template: templates/AwacsBalancer.yaml
+    set:
+      override_defaults.deploy_project: dp
+      override_defaults.monitoring_project: mp
+      override_defaults.traffic_source: CUSTOM_SRC
+    asserts:
+      - equal:
+          path: spec.balancer_spec.deploy_project
+          value: dp
+      - equal:
+          path: spec.balancer_spec.monitoring_settings.monitoring_project
+          value: mp
+      - equal:
+          path: spec.balancer_spec.traffic_source
+          value: CUSTOM_SRC
+---
+suite: namespace object limits
+release:
+  name: release-name
+values:
+  - ../values-example.yaml
+templates:
+  - templates/AwacsNamespace.yaml
+tests:
+  - it: default object limits
+    asserts:
+      - equal:
+          path: spec.namespace_spec.object_upper_limits.certificate
+          value: 250
+      - equal:
+          path: spec.namespace_spec.object_upper_limits.l3_balancer
+          value: 1
+  - it: override object limits
+    set:
+      override_defaults.object_upper_limits_certificate: 500
+      override_defaults.object_upper_limits_l3_balancer: 2
+    asserts:
+      - equal:
+          path: spec.namespace_spec.object_upper_limits.certificate
+          value: 500
+      - equal:
+          path: spec.namespace_spec.object_upper_limits.l3_balancer
+          value: 2

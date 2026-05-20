@@ -1,0 +1,14 @@
+# YANGOCLOUD-2219
+berizaryad:
+  extends: common2tvm
+  config:
+    l7_upstream_macro:
+      headers:
+        - create:
+            target: X-YaReal-Port
+            func: realport
+            keep_existing: true
+        - create:
+            target: X-Forwarded-For
+            func: realip
+            keep_existing: true

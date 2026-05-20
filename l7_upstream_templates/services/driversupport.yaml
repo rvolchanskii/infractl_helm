@@ -1,0 +1,20 @@
+# YANGOCLOUD-2392
+driversupport:
+  extends: common1sethost
+  config:
+    l7_upstream_macro:
+      matcher:
+        any: false
+        or_:
+          - path_re: '/webview/driver-support(/.*)?'
+          - path_re: '/webview-driver-support-api(/.*)?'
+          - path_re: '/new-webview-driver-support-api(/.*)?'
+          - path_re: '/api/driver-support(/.*)?'
+          - path_re: '/s3/.*'
+      headers:
+        - create:
+            target: X-Balancer-Tvm-Service-Ticket
+            func: tvm_service_ticket:{{ .tvm_service_ticket }}
+        - create:
+            target: X-Real-IP
+            func: realip

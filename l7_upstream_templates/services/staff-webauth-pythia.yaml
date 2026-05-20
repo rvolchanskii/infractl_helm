@@ -1,0 +1,18 @@
+# YANGOCLOUD-2106
+staff-webauth-pythia:
+  extends: common2tvm
+  config:
+    l7_upstream_macro:
+      headers:
+        - create:
+            target: X-Req-Id
+            func: reqid
+        - create:
+            target: X-Forwarded-Proto
+            func: scheme
+        - create:
+            target: X-Forwarded-For
+            func: realip
+        - create:
+            target: X-Forwarded-Host
+            func: host

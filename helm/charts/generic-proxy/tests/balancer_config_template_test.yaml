@@ -1,0 +1,78 @@
+suite: balancer config templates
+release:
+  name: balancer-config
+templates:
+  - templates/AwacsBalancer.yaml
+set:
+  infractl_namespace: test-ns
+  environment: testing
+  tvm_settings:
+    enabled: DISABLED
+  override_defaults: {}
+  components: {}
+  balancer:
+    config_template: generic
+  balancer_config_templates:
+    generic:
+      config:
+        l7_macro:
+          announce_check_reply:
+            url_re: /ext_ping
+          health_check_reply: {}
+          http:
+            redirect_to_https:
+              permanent: true
+          https:
+            tls_settings:
+              preset: STRONG
+            enable_http2: true
+          include_domains: {}
+          version: 0.17.0
+    custom-version:
+      extends: generic
+      config:
+        l7_macro:
+          version: 0.18.0
+    webauth-rate-limit:
+      extends: generic
+      config:
+        l7_macro:
+          rps_limiter:
+            local:
+              interval: 1s
+              max_requests: 100
+              max_requests_in_queue: 100
+    antirobot-template:
+      extends: generic
+      config:
+        l7_macro:
+          antirobot:
+            service: "{{ .antirobot_service }}"
+            req_group: "{{ .antirobot_req_group }}"
+tests:
+  - it: webauth rate limit applied
+    set:
+      balancer.config_template: webauth-rate-limit
+    asserts:
+      - equal:
+          path: spec.balancer_spec.yandex_balancer.config.l7_macro.rps_limiter.local.interval
+          value: 1s
+      - equal:
+          path: spec.balancer_spec.yandex_balancer.config.l7_macro.rps_limiter.local.max_requests
+          value: 100
+      - equal:
+          path: spec.balancer_spec.yandex_balancer.config.l7_macro.rps_limiter.local.max_requests_in_queue
+          value: 100
+  - it: renders antirobot params into template
+    set:
+      override_defaults:
+        antirobot_service: taxi-client
+        antirobot_req_group: taxi_client_group
+      balancer.config_template: antirobot-template
+    asserts:
+      - equal:
+          path: spec.balancer_spec.yandex_balancer.config.l7_macro.antirobot.service
+          value: taxi-client
+      - equal:
+          path: spec.balancer_spec.yandex_balancer.config.l7_macro.antirobot.req_group
+          value: taxi_client_group

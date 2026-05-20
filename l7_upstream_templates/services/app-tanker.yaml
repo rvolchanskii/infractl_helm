@@ -1,0 +1,9 @@
+#YANGOCLOUD-2592
+app-tanker:
+  extends: common1sethost
+  config:
+    l7_upstream_macro:
+      headers:
+        - create:
+            target: X-Forwarded-Proto
+            func: scheme

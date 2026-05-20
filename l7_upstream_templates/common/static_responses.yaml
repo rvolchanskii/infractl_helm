@@ -1,0 +1,26 @@
+default200:
+  extends: generic
+  config:
+    l7_upstream_macro:
+      matcher:
+        any: true
+      static_response:
+        status: 200
+
+default404:
+  extends: generic
+  config:
+    l7_upstream_macro:
+      matcher:
+        any: true
+      static_response:
+        status: 404
+
+ping200:
+  extends: generic
+  config:
+    l7_upstream_macro:
+      matcher:
+        url_re: /ping
+      static_response:
+        status: 200

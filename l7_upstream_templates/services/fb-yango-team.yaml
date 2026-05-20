@@ -1,0 +1,18 @@
+# YANGOCLOUD-1836
+fb-yango-team:
+  extends: common2tvm
+  config:
+    l7_upstream_macro:
+      headers:
+        - create:
+            target: X-Forwarded-For
+            func: realip
+        - create:
+            target: X-Forwarded-Proto
+            func: scheme
+        - create:
+            target: X-Real-Ip
+            func: realip
+        - create:
+            target: X-Request-Id
+            func: reqid

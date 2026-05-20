@@ -1,0 +1,35 @@
+components:
+  awacslet:
+    state: SET
+    version: 0.0.25
+  awacslet_get_workers_provider:
+    state: SET
+    version: 0.0.1
+  base_layer:
+    state: SET
+    version: xenial-1
+  endpoint_root_certs:
+    state: SET
+    version: 0.3.0
+  get_workers_provider:
+    state: REMOVED
+  instancectl:
+    state: SET
+    version: 2.114
+  instancectl_conf:
+    state: REMOVED
+  juggler_checks_bundle:
+    state: SET
+    version: 0.0.3
+  pginx_binary:
+    state: SET
+    version: 439-0
+  shawshank_layer:
+    state: SET
+    version: 0.0.9
+  unified_agent:
+    state: SET
+    version: 24.12.2
+  utility_layer:
+    state: SET
+    version: 0.0.1

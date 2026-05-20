@@ -1,0 +1,14 @@
+{{- include "generic.require_network_macro_grants" . }}
+apiVersion: k.yandex-team.ru/v1
+kind: NetworkMacro
+metadata:
+  name: {{ include "generic.require_k8s_name_len" (include "generic.network_macro_name" .) }}
+  namespace: {{ .Values.infractl_namespace }}
+spec:
+  description: "Created by infractl for balancer {{ include "generic.awacs_namespace_name" . }}"
+  grants:
+  {{- include "generic.network_macro_grants" . | nindent 2 }}
+  parent: {{ include "generic.parent_network_macro_name" . }}
+  tags:
+    - {{ .Values.environment }}
+  deletion_policy: DELETE_COMPLETELY

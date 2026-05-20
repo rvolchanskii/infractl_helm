@@ -1,0 +1,14 @@
+femida:
+  extends: common1tvm
+  config:
+    l7_upstream_macro:
+      headers:
+        - create:
+            target: X-Forwarded-For
+            func: realip
+        - create:
+            target: X-Real-Ip
+            func: realip
+      flat_scheme:
+        balancer:
+          backend_timeout: 60s

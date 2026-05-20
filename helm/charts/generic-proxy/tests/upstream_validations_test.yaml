@@ -1,0 +1,67 @@
+suite: upstream template validations
+release:
+  name: release-name
+values:
+  - ../values-example.yaml
+templates:
+  - templates/AwacsUpstream.yaml
+tests:
+  - it: fails on unknown template parent
+    set:
+      domains: {}
+      'domains.[bad.test].shadow_fqdns[0]': bad.test
+      'domains.[bad.test].target_fqdn': ya.ru
+      'domains.[bad.test].l7_upstream_template': bad
+      l7_upstream_templates.bad.extends: unknown
+    asserts:
+      - failedTemplate:
+          errorPattern: "extends unknown template"
+  - it: fails on recursive template extends
+    set:
+      domains: {}
+      'domains.[loop.test].shadow_fqdns[0]': loop.test
+      'domains.[loop.test].target_fqdn': ya.ru
+      'domains.[loop.test].l7_upstream_template': loop1
+      l7_upstream_templates.loop1.extends: loop2
+      l7_upstream_templates.loop2.extends: loop1
+    asserts:
+      - failedTemplate:
+          errorPattern: "recursive extends"
+  - it: fails on extends depth limit
+    set:
+      domains: {}
+      'domains.[depth-fail.test].shadow_fqdns[0]': depth-fail.test
+      'domains.[depth-fail.test].target_fqdn': ya.ru
+      'domains.[depth-fail.test].l7_upstream_template': tmpl1
+      l7_upstream_templates.tmpl1.extends: tmpl2
+      l7_upstream_templates.tmpl2.extends: tmpl3
+      l7_upstream_templates.tmpl3.extends: tmpl4
+      l7_upstream_templates.tmpl4.extends: tmpl5
+      l7_upstream_templates.tmpl5.extends: tmpl6
+      l7_upstream_templates.tmpl6.extends: tmpl7
+      l7_upstream_templates.tmpl7.extends: tmpl8
+      l7_upstream_templates.tmpl8.extends: tmpl9
+      l7_upstream_templates.tmpl9.extends: tmpl10
+      l7_upstream_templates.tmpl10.extends: tmpl11
+      l7_upstream_templates.tmpl11.extends: generic
+    asserts:
+      - failedTemplate:
+          errorPattern: "extends chain exceeds max depth"
+  - it: allows extends chain up to depth limit
+    set:
+      domains: {}
+      'domains.[depth-ok.test].shadow_fqdns[0]': depth-ok.test
+      'domains.[depth-ok.test].target_fqdn': ya.ru
+      'domains.[depth-ok.test].l7_upstream_template': tmpl1
+      l7_upstream_templates.tmpl1.extends: tmpl2
+      l7_upstream_templates.tmpl2.extends: tmpl3
+      l7_upstream_templates.tmpl3.extends: tmpl4
+      l7_upstream_templates.tmpl4.extends: tmpl5
+      l7_upstream_templates.tmpl5.extends: tmpl6
+      l7_upstream_templates.tmpl6.extends: tmpl7
+      l7_upstream_templates.tmpl7.extends: tmpl8
+      l7_upstream_templates.tmpl8.extends: tmpl9
+      l7_upstream_templates.tmpl9.extends: generic
+    asserts:
+      - hasDocuments:
+          count: 13

@@ -1,0 +1,21 @@
+# YANGOCLOUD-1976
+help-yango-team:
+  extends: common2tvmtaxisethost
+  config:
+    l7_upstream_macro:
+      headers:
+        - create:
+            target: X-Forwarded-For
+            func: realip
+        - create:
+            target: X-Client-Real-Ip
+            func: realip
+        - create:
+            target: X-Forwarded-Proto
+            func: scheme
+        - create:
+            target: X-Request-Id
+            func: reqid
+        - copy:
+            target: X-Original-Request-Id
+            source: X-Request-Id

@@ -1,0 +1,12 @@
+# YANGOCLOUD-1962
+public-tray:
+  extends: common2tvmtaxisethost
+  config:
+    l7_upstream_macro:
+      headers:
+        - create:
+            target: X-Request-ID
+            func: reqid
+        - create:
+            target: X-Forwarded-For
+            func: realip

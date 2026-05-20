@@ -1,0 +1,60 @@
+media-adv:
+  extends: common2tvm
+  config:
+    l7_upstream_macro:
+      headers:
+      - create:
+          target: X-Start-Time
+          func: starttime
+      - create:
+          target: X-Req-Id
+          func: reqid
+      - create:
+          target: X-Balancer-IP
+          func: localip
+      - create:
+          target: X-Balancer-Port
+          func: localport
+      - create:
+          target: X-Yandex-Ja3
+          func: ja3
+      - create:
+          target: X-Yandex-Ja4
+          func: ja4
+      - create:
+          target: X-Yandex-P0f
+          func: p0f
+      - create:
+          target: Host
+          value: "{{ .host_header }}"
+      - create:
+          target: X-Market-Req-ID
+          keep_existing: true
+          func: market_reqid
+      - create:
+          target: X-Yandex-RandomUID
+          keep_existing: true
+          func: yuid
+      - create:
+          target: X-YandexUID
+          keep_existing: true
+          func: yuid
+      - create:
+          target: X-Forwarded-For
+          keep_existing: true
+          func: realip
+      - create:
+          target: X-Real-Ip
+          keep_existing: true
+          func: realip
+      - create:
+          target: X-Source-Port-Y
+          keep_existing: true
+          func: realport
+      - create:
+          target: X-Market-Original-Host
+          keep_existing: true
+          func: host
+      - create:
+          target: Y-Service
+          value: market

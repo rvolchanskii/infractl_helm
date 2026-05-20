@@ -1,0 +1,7 @@
+aai-chat:
+  extends: common1tvm
+  config:
+    l7_upstream_macro:
+      flat_scheme:
+        balancer:
+          backend_timeout: 300s

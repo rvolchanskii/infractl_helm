@@ -1,0 +1,99 @@
+suite: balancer location and config
+release:
+  name: location-test
+values:
+  - ../values-example.yaml
+set:
+  components:
+    awacslet:
+      state: SET
+      version: 0.0.25
+    awacslet_get_workers_provider:
+      state: SET
+      version: 0.0.1
+    base_layer:
+      state: SET
+      version: xenial-1
+    endpoint_root_certs:
+      state: SET
+      version: 0.3.0
+    get_workers_provider:
+      state: REMOVED
+    instancectl:
+      state: SET
+      version: 2.114
+    instancectl_conf:
+      state: REMOVED
+    juggler_checks_bundle:
+      state: SET
+      version: 0.0.3
+    pginx_binary:
+      state: SET
+      version: 439-0
+    shawshank_layer:
+      state: SET
+      version: 0.0.9
+    unified_agent:
+      state: SET
+      version: 24.12.2
+    utility_layer:
+      state: SET
+      version: 0.0.1
+  balancer:
+    config:
+      l7_macro:
+        announce_check_reply:
+          url_re: /ext_ping
+        health_check_reply: {}
+        http:
+          redirect_to_https:
+            permanent: true
+        https: {}
+        include_domains: {}
+        version: 0.17.0
+templates:
+  - templates/AwacsBalancer.yaml
+tests:
+  - it: custom location override
+    set:
+      override_defaults.location.node_segment: custom-seg
+      override_defaults.location.city: Moscow
+      override_defaults.location.country: Russia
+      override_defaults.location.country_code: RU
+      override_defaults.location.provider: DC
+      override_defaults.location.yp_cluster: MY
+    asserts:
+      - equal:
+          path: spec.balancer_spec.yandex_balancer.system.location.node_segment_info.node_segment
+          value: custom-seg
+      - equal:
+          path: spec.balancer_spec.yandex_balancer.system.location.node_segment_info.short_dc.city
+          value: Moscow
+      - equal:
+          path: spec.balancer_spec.yandex_balancer.system.location.node_segment_info.short_dc.country
+          value: Russia
+      - equal:
+          path: spec.balancer_spec.yandex_balancer.system.location.node_segment_info.short_dc.country_code
+          value: RU
+      - equal:
+          path: spec.balancer_spec.yandex_balancer.system.location.node_segment_info.short_dc.provider
+          value: DC
+      - equal:
+          path: spec.balancer_spec.yandex_balancer.system.location.yp_cluster
+          value: MY
+  - it: components have expected versions
+    asserts:
+      - equal:
+          path: spec.balancer_spec.components.awacslet.version
+          value: "0.0.25"
+      - equal:
+          path: spec.balancer_spec.components.pginx_binary.version
+          value: "439-0"
+      - equal:
+          path: spec.balancer_spec.components.unified_agent.version
+          value: "24.12.2"
+  - it: redirect to https enabled
+    asserts:
+      - equal:
+          path: spec.balancer_spec.yandex_balancer.config.l7_macro.http.redirect_to_https.permanent
+          value: true

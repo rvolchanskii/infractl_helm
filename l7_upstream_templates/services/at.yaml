@@ -1,0 +1,15 @@
+# at-external-proxy-balancer
+at:
+  extends: common2tvm
+  config:
+    l7_upstream_macro:
+      headers:
+        - create:
+            target: X-Forwarded-For
+            func: realip
+        - create:
+            target: X-Forwarded-Proto
+            func: scheme
+        - create:
+            target: X-Real-Ip
+            func: realip

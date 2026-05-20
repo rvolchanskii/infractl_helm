@@ -1,0 +1,34 @@
+# YANGOCLOUD-2000
+trip-yango-team:
+  extends: common2tvmtaxi
+  config:
+    l7_upstream_macro:
+      headers:
+        - create:
+            target: X-Forwarded-For
+            func: realip
+      response_headers:
+        - create:
+            target: X-Frame-Options
+            value: DENY
+        - create:
+            target: X-Content-Type-Options
+            value: nosniff
+      flat_scheme:
+        balancer:
+          protocol: HTTP1
+          attempts: 2
+          fast_attempts: 2
+          max_reattempts_share: 0.15
+          max_pessimized_endpoints_share: 0.2
+          allow_retries_to_same_instance: true
+          health_indicators_preset: DISABLE_PASSIVE_AND_SD_CHECKS
+          backend_timeout: 30s
+          connect_timeout: 3s
+          use_https_to_endpoints:
+            disable_sni: false
+          keepalive_count: 100
+        on_error:
+          static:
+            status: 504
+            content: "Service unavailable"

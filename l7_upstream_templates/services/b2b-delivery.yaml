@@ -1,0 +1,15 @@
+# YANGOCLOUD-2146
+b2b-delivery:
+  extends: common2tvm
+  config:
+    l7_upstream_macro:
+      headers:
+        - create:
+            target: X-Forwarded-For-Y
+            func: realip
+        - create:
+            target: X-Real-IP
+            func: realip
+        - create:
+            target: X-Yandex-Https-Info
+            func: ssl_handshake_info

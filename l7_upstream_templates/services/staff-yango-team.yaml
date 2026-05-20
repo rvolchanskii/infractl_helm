@@ -1,0 +1,28 @@
+# YANGOCLOUD-2112, YANGOCLOUD-2113, YANGOCLOUD-2115, YANGOCLOUD-2116
+staff-yango-team:
+  extends: common2tvm
+  config:
+    l7_upstream_macro:
+      headers:
+        - create:
+            target: X-Forwarded-For
+            func: realip
+        - create:
+            target: X-Client-Real-Ip
+            func: realip
+        - create:
+            target: X-Forwarded-Proto
+            func: scheme
+        - create:
+            target: X-Real-Ip
+            func: realip
+        - create:
+            target: X-Request-Id
+            func: reqid
+        - copy:
+            target: X-Original-Request-Id
+            source: X-Request-Id
+      response_headers:
+        - copy_from_request:
+            target: X-Yandex-Internal-Request
+            source: X-Yandex-Internal-Request

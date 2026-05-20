@@ -1,0 +1,33 @@
+# YANGOCLOUD-1877
+files-messenger:
+  extends: common1sethost
+  config:
+    l7_upstream_macro:
+      headers:
+        - create:
+            target: X-Balancer-Tvm-Service-Ticket
+            func: tvm_service_ticket:{{ .tvm_service_ticket }}
+        - create:
+            target: X-Forwarded-For
+            func: realip
+        - create:
+            target: X-Real-IP
+            func: realip
+        - create:
+            target: X-Source-Port-Y
+            func: realport
+        - create:
+            target: X-Forwarded-Host
+            func: host
+        - create:
+            target: X-Forwarded-Proto
+            func: scheme
+        - create:
+            target: X-Request-Id
+            func: reqid
+        - create:
+            target: X-Start-Time
+            func: starttime
+        - copy:
+            target: X-Req-Id
+            source: X-Request-Id

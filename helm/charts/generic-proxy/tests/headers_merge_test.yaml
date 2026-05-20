@@ -1,0 +1,31 @@
+suite: headers merge
+release:
+  name: release-name
+values:
+  - ../values-example.yaml
+templates:
+  - templates/AwacsUpstream.yaml
+tests:
+  - it: merges headers without duplicates
+    documentSelector:
+      path: metadata.name
+      value: ya-ru-443-common2sethost-26c95fa6
+    asserts:
+      - equal:
+          path: spec.upstream_spec.yandex_balancer.config.l7_upstream_macro.headers
+          value:
+            - create:
+                func: realip
+                target: X-Real-IP
+            - create:
+                func: tvm_service_ticket:2056065
+                target: X-Balancer-Tvm-Service-Ticket
+            - create:
+                target: X-Ya-Header1
+                value: asdqwe1
+            - create:
+                target: X-Ya-Header2
+                value: 123qwe
+            - create:
+                target: Host
+                value: test5.taxi.tst.yandex.net

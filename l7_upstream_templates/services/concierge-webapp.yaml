@@ -1,0 +1,12 @@
+# YANGOCLOUD-2333
+concierge-webapp:
+  extends: common1tvmtaxi
+  config:
+    l7_upstream_macro:
+      headers:
+        - copy:
+            target: X-Forwarded-Y-Host
+            source: Host
+        - create:
+            target: Host
+            value: "{{ .host_header }}"

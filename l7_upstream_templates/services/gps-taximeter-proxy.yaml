@@ -1,0 +1,52 @@
+gps-taximeter-proxy:
+  extends: generic
+  config:
+    l7_upstream_macro:
+      matcher:
+        host_re: 'gps\.taximeter\..*'
+      headers:
+        - copy:
+            source: Host
+            target: X-YProxy-Header-Host
+            keep_existing: false
+        - create:
+            target: X-Forwarded-For-Y
+            func: realip
+        - create:
+            target: X-YProxy
+            value: "true"
+            keep_existing: false
+        - create:
+            target: X-NginX-Proxy
+            value: "true"
+            keep_existing: false
+        - create:
+            target: Host
+            value: '{{ .host_header }}'
+            keep_existing: false
+        - create:
+            target: X-Real-IP
+            func: realip
+        - create:
+            target: X-Forwarded-For
+            func: realip
+      flat_scheme:
+        balancer:
+          protocol: HTTP2
+          attempts: 2
+          fast_attempts: 2
+          max_reattempts_share: 0.15
+          max_pessimized_endpoints_share: 0.2
+          allow_retries_to_same_instance: true
+          health_indicators_preset: DISABLE_PASSIVE_AND_SD_CHECKS
+          retry_http_responses:
+            codes: ["5xx"]
+          backend_timeout: 10s
+          connect_timeout: 1s
+          use_https_to_endpoints:
+            disable_sni: false
+          keepalive_count: 100
+        on_error:
+          static:
+            status: 504
+            content: "Service unavailable"

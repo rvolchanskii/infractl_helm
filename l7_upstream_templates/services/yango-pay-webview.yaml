@@ -1,0 +1,23 @@
+yango-pay-webview:
+  extends: common2tvmtaxi
+  config:
+    l7_upstream_macro:
+      headers:
+      - create:
+          func: realip
+          target: x-real-ip
+      - create:
+          func: realip
+          target: x-remote-ip
+      - create:
+          func: realip
+          target: x-forwarded-for
+      - create:
+          func: scheme
+          target: x-forwarded-proto
+      - create:
+          func: host
+          target: x-forwarded-host
+      flat_scheme:
+        balancer:
+          backend_timeout: 60s

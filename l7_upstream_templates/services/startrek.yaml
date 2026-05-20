@@ -1,0 +1,25 @@
+startrek:
+  extends: common1
+  config:
+    l7_upstream_macro:
+      flat_scheme:
+        balancer:
+          backend_timeout: 600s
+          backend_read_timeout: 600s
+          backend_write_timeout: 600s
+      headers:
+        - create:
+            target: X-Forwarded-For
+            func: realip
+        - create:
+            target: X-Request-Id
+            func: reqid
+        - create:
+            target: X-Forwarded-Proto
+            func: scheme
+        - create:
+            target: X-Real-IP
+            func: realip
+        - create:
+            target: X-Forwared-Host
+            func: host

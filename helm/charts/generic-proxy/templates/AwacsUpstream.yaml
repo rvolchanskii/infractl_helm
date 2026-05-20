@@ -1,0 +1,93 @@
+{{- /* Generate unique upstream list based on getUpstreamKey */}}
+{{- include "generic.require_valid_extends" .Values.l7_upstream_templates }}
+{{- include "generic.require_no_recursive_extends" .Values.l7_upstream_templates }}
+{{- include "generic.require_extends_depth_limit" .Values.l7_upstream_templates }}
+{{- include "generic.require_domain_template_placeholders" . }}
+{{- include "generic.require_domain_template_placeholder_usage" . }}
+{{- $processedUpstreams := dict -}}
+{{- range $name, $domain := .Values.domains }}
+{{- if $domain.upstreams }}
+{{- range $idx, $upstream := $domain.upstreams }}
+{{- $upstreamKey := include "getUpstreamKey" $upstream }}
+{{- if not (hasKey $processedUpstreams $upstreamKey) }}
+{{- $_ := set $processedUpstreams $upstreamKey $upstream }}
+---
+apiVersion: k.yandex-team.ru/v1
+kind: AwacsUpstream
+metadata:
+  {{- $upName := include "generic.awacs_upstream_name" (dict "domain" $upstream "root" $) }}
+  name: {{ include "generic.require_k8s_name_len" $upName }}
+  namespace: {{ $.Values.infractl_namespace }}
+spec:
+  namespace_id: {{ include "generic.awacs_namespace_name" $ }}
+  upstream_spec:
+    {{- if $upstream.target_fqdn }}
+    backends:
+      instances:
+        - host: {{ $upstream.target_fqdn }}
+          port: {{ default 443 $upstream.target_port }}
+      type: MANUAL
+    {{- end }}
+    labels:
+      order: "{{ default "10000000" $domain.order }}"
+    yandex_balancer:
+      config:
+        {{- $ctx := dict
+          "tvm_service_ticket" $upstream.tvm_service_ticket
+          "host_header" $upstream.host_header
+        }}
+        {{- $config := dict }}
+        {{- if $upstream.l7_upstream_config }}
+          {{- $_ := set $config "base" (tpl (toYaml $upstream.l7_upstream_config) $ | fromYaml) }}
+        {{- else }}
+          {{- $resolved := include "resolveUpstreamTemplate" (dict
+            "name" $upstream.l7_upstream_template
+            "templates" $.Values.l7_upstream_templates
+          ) | fromYaml }}
+          {{- $_ := set $config "base" (tpl (toYaml $resolved.config) $ctx | fromYaml) }}
+        {{- end }}
+        {{- toYaml $config.base | nindent 8 }}
+      mode: EASY_MODE2
+{{ end -}}
+{{- end }}
+{{- else }}
+{{- $upstreamKey := include "getUpstreamKey" $domain -}}
+{{- if $domain.host_header }}
+{{- $upstreamKey = printf "%s-%s" $upstreamKey $domain.host_header }}
+{{- end }}
+{{- if not (hasKey $processedUpstreams $upstreamKey) -}}
+{{- $_ := set $processedUpstreams $upstreamKey $domain -}}
+---
+apiVersion: k.yandex-team.ru/v1
+kind: AwacsUpstream
+metadata:
+  {{- $upName := include "generic.awacs_upstream_name" (dict "domain" $domain "root" $) }}
+  name: {{ include "generic.require_k8s_name_len" $upName }}
+  namespace: {{ $.Values.infractl_namespace }}
+spec:
+  namespace_id: {{ include "generic.awacs_namespace_name" $ }}
+  upstream_spec:
+    {{- if $domain.target_fqdn }}
+    backends:
+      instances:
+        - host: {{ $domain.target_fqdn }}
+          port: {{ default 443 $domain.target_port }}
+      type: MANUAL
+    {{- end }}
+    labels:
+      order: "{{ default "10000000" $domain.order }}"
+    yandex_balancer:
+      config:
+        {{- $ctx := dict "tvm_service_ticket" $domain.tvm_service_ticket "host_header" $domain.host_header }}
+        {{- $config := dict }}
+        {{- if $domain.l7_upstream_config }}
+          {{- $_ := set $config "base" (tpl (toYaml $domain.l7_upstream_config) $ | fromYaml) }}
+        {{- else }}
+          {{- $resolved := include "resolveUpstreamTemplate" (dict "name" $domain.l7_upstream_template "templates" $.Values.l7_upstream_templates) | fromYaml }}
+          {{- $_ := set $config "base" (tpl (toYaml $resolved.config) $ctx | fromYaml) }}
+        {{- end }}
+        {{- toYaml $config.base | nindent 8 }}
+      mode: EASY_MODE2
+{{ end -}}
+{{- end -}}
+{{- end }}

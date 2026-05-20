@@ -1,0 +1,11 @@
+quantum-yango-team:
+  extends: common2tvm
+  config:
+    l7_upstream_macro:
+      headers:
+        - create:
+            target: X-Forwarded-Proto
+            func: scheme
+        - create:
+            target: X-Request-Id
+            func: reqid

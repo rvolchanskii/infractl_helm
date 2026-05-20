@@ -1,0 +1,120 @@
+balancer_config_templates:
+  generic:
+    config:
+      l7_macro:
+        version: 0.18.0
+  common:
+    extends: generic
+    config:
+      l7_macro:
+        announce_check_reply:
+          url_re: /ext_ping
+        health_check_reply: {}
+        http:
+          redirect_to_https:
+            permanent: true
+        https:
+          tls_settings:
+            preset: PCI_DSS_V4
+          enable_http2: true
+        include_domains: {}
+  common-antirobot-ext:
+    extends: common
+    config:
+      l7_macro:
+        antirobot:
+          service: "{{ .antirobot_service }}"
+          req_group: "{{ .antirobot_req_group }}"
+          endpoint_sets:
+          - cluster: ext
+            id: prod-antirobot-aws-passport
+  yango-team-antirobot-ext:
+    extends: common-antirobot-ext
+    config:
+      l7_macro:
+        antirobot:
+          compat:
+            domains:
+              - "yango-team.com"
+  webauth-rate-limit:
+    extends: common-antirobot-ext
+    config:
+      l7_macro:
+        rps_limiter:
+          local:
+            interval: 1s
+            max_requests: 100
+            max_requests_in_queue: 100
+        webauth:
+          mode: SIMPLE
+          action: AUTHORIZE
+          pass_options_requests_through: false
+          upstream_suffix: _extended_timeouts
+  tc-eu:
+    extends: common
+    config:
+      l7_macro:
+        compat:
+          maxconn: 15000
+          enable_meta: true
+        cpu_limiter:
+          http2_smooth_drop: false
+        antirobot:
+          service: "{{ .antirobot_service }}"
+          endpoint_sets:
+            - cluster: ext
+              id: prod-antirobot-aws-passport
+        headers:
+          - create:
+              target: X-Yandex-TCP-Info
+              func: tcp_info
+          - create:
+              target: X-Req-Id
+              func: reqid
+          - create:
+              target: X-Yandex-HTTPS-Info
+              func: ssl_handshake_info
+          - create:
+              target: X-Yandex-Early-Data
+              func: ssl_early_data
+          - create:
+              target: X-Yandex-Ja3
+              func: ja3
+          - create:
+              target: X-Yandex-Ja4
+              func: ja4
+          - log:
+              target_re: User-Agent
+  taximeter-proxy-eu:
+    extends: common
+    config:
+      l7_macro:
+        compat:
+          maxconn: 15000
+          enable_meta: true
+        cpu_limiter:
+          http2_smooth_drop: false
+        http:
+          ports:
+            - 80
+        https:
+          ports:
+            - 443
+            - 11443
+        antirobot:
+          service: "{{ .antirobot_service }}"
+          endpoint_sets:
+            - cluster: ext
+              id: prod-antirobot-aws-passport
+        headers:
+          - log:
+              target_re: User-Agent
+          - create:
+              target: X-AWACS-BALANCER-PORT
+              func: localport
+  common-antirobot-ext-ping:
+    extends: common-antirobot-ext
+    config:
+      l7_macro:
+        announce_check_reply:
+          url_re: /ping

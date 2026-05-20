@@ -1,0 +1,7 @@
+generic:
+  config:
+    l7_upstream_macro:
+      version: 0.3.19
+      monitoring:
+        per_backend_signals:
+          enabled: true

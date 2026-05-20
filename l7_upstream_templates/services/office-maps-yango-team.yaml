@@ -1,0 +1,9 @@
+# YANGOCLOUD-1841
+office-maps-yango-team:
+  extends: common2tvmtaxi
+  config:
+    l7_upstream_macro:
+      headers:
+        - create:
+            target: X-Forwarded-For
+            func: realip

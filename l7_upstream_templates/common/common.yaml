@@ -1,0 +1,109 @@
+common1:
+  extends: generic
+  config:
+    l7_upstream_macro:
+      matcher:
+        any: true
+      flat_scheme:
+        balancer:
+          allow_retries_to_same_instance: true
+          attempts: 1
+          backend_timeout: 10s
+          connect_timeout: 1s
+          do_not_retry_http_responses: true
+          fast_attempts: 2
+          health_indicators_preset: DISABLE_PASSIVE_AND_SD_CHECKS
+          keepalive_count: 100
+          max_pessimized_endpoints_share: 0.2
+          max_reattempts_share: 0.15
+          retry_non_idempotent: false
+          use_https_to_endpoints:
+            disable_sni: false
+        on_error:
+          static:
+            content: Service unavailable
+            status: 504
+
+common1xrealip:
+  extends: common1
+  config:
+    l7_upstream_macro:
+      headers:
+        - create:
+            target: X-Real-IP
+            func: realip
+
+common1sethost:
+  extends: common1
+  config:
+    l7_upstream_macro:
+      headers:
+      - create:
+          target: Host
+          value: "{{ .host_header }}"
+
+common1tvm:
+  extends: common1
+  config:
+    l7_upstream_macro:
+      headers:
+        - create:
+            target: X-Balancer-Tvm-Service-Ticket
+            func: tvm_service_ticket:{{ .tvm_service_ticket }}
+
+common1tvmtaxi:
+  extends: common1tvm
+  config:
+    l7_upstream_macro:
+      headers:
+        - create:
+            target: X-Real-IP
+            func: realip
+
+common1tvmtaxisethost:
+  extends: common1tvmtaxi
+  config:
+    l7_upstream_macro:
+      headers:
+      - create:
+          target: Host
+          value: "{{ .host_header }}"
+
+common2:
+  extends: common1
+  config:
+    l7_upstream_macro:
+      flat_scheme:
+        balancer:
+          attempts: 2
+
+common2sethost:
+  extends: common1sethost
+  config:
+    l7_upstream_macro:
+      flat_scheme:
+        balancer:
+          attempts: 2
+common2tvm:
+  extends: common1tvm
+  config:
+    l7_upstream_macro:
+      flat_scheme:
+        balancer:
+          attempts: 2
+
+common2tvmtaxi:
+  extends: common1tvmtaxi
+  config:
+    l7_upstream_macro:
+      flat_scheme:
+        balancer:
+          attempts: 2
+
+common2tvmtaxisethost:
+  extends: common1tvmtaxisethost
+  config:
+    l7_upstream_macro:
+      flat_scheme:
+        balancer:
+          attempts: 2

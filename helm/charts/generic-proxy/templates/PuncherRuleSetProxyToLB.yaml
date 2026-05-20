@@ -1,0 +1,53 @@
+{{- $processed := dict -}}
+{{- range $name, $domain := .Values.domains }}
+{{- $request := eq (include "generic.request_puncher_rules" (dict "domain" $domain "root" $)) "true" }}
+{{- if $request }}
+{{- if $domain.upstreams }}
+{{- range $upstream := $domain.upstreams }}
+{{- $key := include "getTargetKey" $upstream }}
+{{- if not (hasKey $processed $key) }}
+{{- $_ := set $processed $key true }}
+---
+apiVersion: k.yandex-team.ru/v1
+kind: PuncherRuleSet
+metadata:
+  name: {{ include "generic.require_k8s_name_len" (printf "%s-%s" $key (include "generic.awacs_namespace_name" $ | sha256sum | trunc 8) | replace "." "-") }}
+  namespace: {{ $.Values.infractl_namespace }}
+spec:
+  rules:
+    proxy-to-l3:
+      spec:
+        description: 'Проксирование {{ $upstream.target_fqdn }} через RTC over AWS Такси на балансере {{ (include "generic.awacs_namespace_name" $) }}, доступ с подов прокси-балансера до L3 балансера в России, саппорт чат https://nda.ya.ru/t/ZJK3CddK75UZkk. Список проксируемых доменов - https://a.yandex-team.ru/arcadia/taxi/yango/aws-taxi-rtc/infractl/aws-taxi-rtc-{{ $.Values.environment }}/{{ include "generic.awacs_namespace_name" $ }}/values.yaml'
+        destinations:
+          - {{ $upstream.target_fqdn }}
+        ports: "{{ default 443 $upstream.target_port }}"
+        protocol: TCP
+        sources:
+          - {{ include "generic.network_macro" $ }}
+{{- end }}
+{{- end }}
+{{- else }}
+{{- $key := include "getTargetKey" $domain }}
+{{- if not (hasKey $processed $key) }}
+{{- $_ := set $processed $key true }}
+---
+apiVersion: k.yandex-team.ru/v1
+kind: PuncherRuleSet
+metadata:
+  name: {{ include "generic.require_k8s_name_len" (printf "%s-%s" $key (include "generic.awacs_namespace_name" $ | sha256sum | trunc 8) | replace "." "-") }}
+  namespace: {{ $.Values.infractl_namespace }}
+spec:
+  rules:
+    proxy-to-l3:
+      spec:
+        description: 'Проксирование {{ $domain.target_fqdn }} через RTC over AWS Такси на балансере {{ (include "generic.awacs_namespace_name" $) }}, доступ с подов прокси-балансера до L3 балансера в России, саппорт чат https://nda.ya.ru/t/ZJK3CddK75UZkk. Список проксируемых доменов - https://a.yandex-team.ru/arcadia/taxi/yango/aws-taxi-rtc/infractl/aws-taxi-rtc-{{ $.Values.environment }}/{{ include "generic.awacs_namespace_name" $ }}.yaml'
+        destinations:
+          - {{ $domain.target_fqdn }}
+        ports: "{{ default 443 $domain.target_port }}"
+        protocol: TCP
+        sources:
+          - {{ include "generic.network_macro" $ }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

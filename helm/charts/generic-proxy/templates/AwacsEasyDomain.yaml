@@ -1,0 +1,34 @@
+{{- include "generic.require_no_shadow_fqdns_intersection" .Values.domains }}
+{{- range $name, $domain := .Values.domains }}
+---
+apiVersion: k.yandex-team.ru/v1
+kind: AwacsEasyDomain
+metadata:
+  {{- $fullName := printf "%s-%s" $name (include "generic.awacs_namespace_name" $ | sha256sum | trunc 8) }}
+  name: {{ include "generic.require_k8s_name_len" $fullName }}
+  namespace: {{ $.Values.infractl_namespace }}
+spec:
+  {{- if $domain.cert_ref_id }}
+  cert_ref:
+    id: {{ $domain.cert_ref_id | quote }}
+  {{- else }}
+  cert:
+    abc_service_id: {{ default "42194" $domain.certificate_abc_service_id }}
+    ca: {{ default (default "INTERNAL" $.Values.override_defaults.certificate_ca) $domain.certificate_ca }}
+    public_key_algorithm_id: {{ default "rsa" $domain.certificate_public_key_algorithm_id }}
+  {{- end }}
+  hsts:
+    max_age: {{ default "8760h0m0s" $domain.hsts_max_age }}
+    mode: {{ default "ENABLED" $domain.hsts_mode }}
+  namespace_id: {{ include "generic.awacs_namespace_name" $ }}
+  shadow_fqdns: {{ splitList "," (include "generic.domain_shadow_fqdns" (dict "name" $name "domain" $domain)) | toYaml | nindent 4 }}
+  {{- if $domain.upstreams }}
+  upstreams:
+  {{- range $upstream := $domain.upstreams }}
+    - {{ include "generic.awacs_upstream_name" (dict "domain" $upstream "root" $) }}
+  {{- end }}
+  {{- else }}
+  upstreams:
+    - {{ include "generic.awacs_upstream_name" (dict "domain" $domain "root" $) }}
+  {{- end }}
+{{- end }}

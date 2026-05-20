@@ -1,0 +1,1101 @@
+l7_upstream_templates:
+  generic:
+    config:
+      l7_upstream_macro:
+        version: 0.3.19
+        monitoring:
+          per_backend_signals:
+            enabled: true
+  common1:
+    extends: generic
+    config:
+      l7_upstream_macro:
+        matcher:
+          any: true
+        flat_scheme:
+          balancer:
+            allow_retries_to_same_instance: true
+            attempts: 1
+            backend_timeout: 10s
+            connect_timeout: 1s
+            do_not_retry_http_responses: true
+            fast_attempts: 2
+            health_indicators_preset: DISABLE_PASSIVE_AND_SD_CHECKS
+            keepalive_count: 100
+            max_pessimized_endpoints_share: 0.2
+            max_reattempts_share: 0.15
+            retry_non_idempotent: false
+            use_https_to_endpoints:
+              disable_sni: false
+          on_error:
+            static:
+              content: Service unavailable
+              status: 504
+  common1xrealip:
+    extends: common1
+    config:
+      l7_upstream_macro:
+        headers:
+        - create:
+            target: X-Real-IP
+            func: realip
+  common1sethost:
+    extends: common1
+    config:
+      l7_upstream_macro:
+        headers:
+        - create:
+            target: Host
+            value: '{{ .host_header }}'
+  common1tvm:
+    extends: common1
+    config:
+      l7_upstream_macro:
+        headers:
+        - create:
+            target: X-Balancer-Tvm-Service-Ticket
+            func: tvm_service_ticket:{{ .tvm_service_ticket }}
+  common1tvmtaxi:
+    extends: common1tvm
+    config:
+      l7_upstream_macro:
+        headers:
+        - create:
+            target: X-Real-IP
+            func: realip
+  common1tvmtaxisethost:
+    extends: common1tvmtaxi
+    config:
+      l7_upstream_macro:
+        headers:
+        - create:
+            target: Host
+            value: '{{ .host_header }}'
+  common2:
+    extends: common1
+    config:
+      l7_upstream_macro:
+        flat_scheme:
+          balancer:
+            attempts: 2
+  common2sethost:
+    extends: common1sethost
+    config:
+      l7_upstream_macro:
+        flat_scheme:
+          balancer:
+            attempts: 2
+  common2tvm:
+    extends: common1tvm
+    config:
+      l7_upstream_macro:
+        flat_scheme:
+          balancer:
+            attempts: 2
+  common2tvmtaxi:
+    extends: common1tvmtaxi
+    config:
+      l7_upstream_macro:
+        flat_scheme:
+          balancer:
+            attempts: 2
+  common2tvmtaxisethost:
+    extends: common1tvmtaxisethost
+    config:
+      l7_upstream_macro:
+        flat_scheme:
+          balancer:
+            attempts: 2
+  default200:
+    extends: generic
+    config:
+      l7_upstream_macro:
+        matcher:
+          any: true
+        static_response:
+          status: 200
+  default404:
+    extends: generic
+    config:
+      l7_upstream_macro:
+        matcher:
+          any: true
+        static_response:
+          status: 404
+  ping200:
+    extends: generic
+    config:
+      l7_upstream_macro:
+        matcher:
+          url_re: /ping
+        static_response:
+          status: 200
+  aai-chat:
+    extends: common1tvm
+    config:
+      l7_upstream_macro:
+        flat_scheme:
+          balancer:
+            backend_timeout: 300s
+  api-browser:
+    extends: common1sethost
+    config:
+      l7_upstream_macro:
+        headers:
+        - create:
+            target: X-Balancer-Tvm-Service-Ticket
+            func: tvm_service_ticket:{{ .tvm_service_ticket }}
+        - create:
+            target: X-Forwarded-For
+            func: realip
+        - create:
+            target: X-Real-Ip
+            func: realip
+        - create:
+            target: X-Source-Port-Y
+            func: realport
+        - create:
+            target: X-Forwarded-Host
+            func: host
+        - create:
+            target: X-Forwarded-Proto
+            func: scheme
+        - create:
+            target: X-Request-Id
+            func: reqid
+  api-messenger:
+    extends: common1sethost
+    config:
+      l7_upstream_macro:
+        headers:
+        - create:
+            target: X-Balancer-Tvm-Service-Ticket
+            func: tvm_service_ticket:{{ .tvm_service_ticket }}
+        - create:
+            target: X-Forwarded-For
+            func: realip
+        - create:
+            target: X-Real-Ip
+            func: realip
+        - create:
+            target: X-Source-Port-Y
+            func: realport
+        - create:
+            target: X-Forwarded-Host
+            func: host
+        - create:
+            target: X-Forwarded-Proto
+            func: scheme
+        - create:
+            target: X-Request-Id
+            func: reqid
+        - create:
+            target: X-Start-Time
+            func: starttime
+        - copy:
+            target: X-Req-Id
+            source: X-Request-Id
+  app-tanker:
+    extends: common1sethost
+    config:
+      l7_upstream_macro:
+        headers:
+        - create:
+            target: X-Forwarded-Proto
+            func: scheme
+  app-taximeter-proxy:
+    extends: generic
+    config:
+      l7_upstream_macro:
+        matcher:
+          host_re: app\.taximeter\..*
+        headers:
+        - copy:
+            source: Host
+            target: X-YProxy-Header-Host
+            keep_existing: false
+        - create:
+            target: X-Forwarded-For-Y
+            func: realip
+        - create:
+            target: X-YProxy
+            value: 'true'
+            keep_existing: false
+        - create:
+            target: X-NginX-Proxy
+            value: 'true'
+            keep_existing: false
+        - create:
+            target: Host
+            value: '{{ .host_header }}'
+            keep_existing: false
+        - create:
+            target: X-Real-IP
+            func: realip
+        - create:
+            target: X-Forwarded-For
+            func: realip
+        flat_scheme:
+          balancer:
+            protocol: HTTP2
+            attempts: 2
+            fast_attempts: 2
+            max_reattempts_share: 0.15
+            max_pessimized_endpoints_share: 0.2
+            allow_retries_to_same_instance: true
+            health_indicators_preset: DISABLE_PASSIVE_AND_SD_CHECKS
+            retry_http_responses:
+              codes:
+              - 5xx
+            backend_timeout: 10s
+            connect_timeout: 1s
+            use_https_to_endpoints:
+              disable_sni: false
+            keepalive_count: 100
+          on_error:
+            static:
+              status: 504
+              content: Service unavailable
+  assetlinks:
+    extends: common2sethost
+    config:
+      l7_upstream_macro:
+        matcher:
+          any: false
+          url_re: /\.well-known/assetlinks\.json
+  at:
+    extends: common2tvm
+    config:
+      l7_upstream_macro:
+        headers:
+        - create:
+            target: X-Forwarded-For
+            func: realip
+        - create:
+            target: X-Forwarded-Proto
+            func: scheme
+        - create:
+            target: X-Real-Ip
+            func: realip
+  b2b-delivery:
+    extends: common2tvm
+    config:
+      l7_upstream_macro:
+        headers:
+        - create:
+            target: X-Forwarded-For-Y
+            func: realip
+        - create:
+            target: X-Real-IP
+            func: realip
+        - create:
+            target: X-Yandex-Https-Info
+            func: ssl_handshake_info
+  bank-details:
+    extends: common2tvm
+    config:
+      l7_upstream_macro:
+        headers:
+        - create:
+            target: X-Forwarded-For
+            func: realip
+        - create:
+            target: X-Request-Id
+            func: reqid
+        - create:
+            target: X-Forwarded-Proto
+            func: scheme
+        - create:
+            target: X-Req-Id
+            func: reqid
+  berizaryad:
+    extends: common2tvm
+    config:
+      l7_upstream_macro:
+        headers:
+        - create:
+            target: X-YaReal-Port
+            func: realport
+            keep_existing: true
+        - create:
+            target: X-Forwarded-For
+            func: realip
+            keep_existing: true
+  chat-taximeter-proxy:
+    extends: generic
+    config:
+      l7_upstream_macro:
+        matcher:
+          host_re: chat\.taximeter\..*
+        headers:
+        - copy:
+            source: Host
+            target: X-YProxy-Header-Host
+            keep_existing: false
+        - create:
+            target: X-Forwarded-For-Y
+            func: realip
+        - create:
+            target: X-YProxy
+            value: 'true'
+            keep_existing: false
+        - create:
+            target: X-NginX-Proxy
+            value: 'true'
+            keep_existing: false
+        - create:
+            target: Host
+            value: '{{ .host_header }}'
+            keep_existing: false
+        - create:
+            target: X-Real-IP
+            func: realip
+        - create:
+            target: X-Forwarded-For
+            func: realip
+        flat_scheme:
+          balancer:
+            protocol: HTTP2
+            attempts: 2
+            fast_attempts: 2
+            max_reattempts_share: 0.15
+            max_pessimized_endpoints_share: 0.2
+            allow_retries_to_same_instance: true
+            health_indicators_preset: DISABLE_PASSIVE_AND_SD_CHECKS
+            retry_http_responses:
+              codes:
+              - 5xx
+            backend_timeout: 10s
+            connect_timeout: 1s
+            use_https_to_endpoints:
+              disable_sni: false
+            keepalive_count: 100
+          on_error:
+            static:
+              status: 504
+              content: Service unavailable
+  compensations-yango-team:
+    extends: common2tvm
+    config:
+      l7_upstream_macro:
+        headers:
+        - create:
+            target: X-Forwarded-For
+            func: realip
+        - create:
+            target: X-Real-Ip
+            func: realip
+        - create:
+            target: X-Request-Id
+            func: reqid
+  concierge-webapp:
+    extends: common1tvmtaxi
+    config:
+      l7_upstream_macro:
+        headers:
+        - copy:
+            target: X-Forwarded-Y-Host
+            source: Host
+        - create:
+            target: Host
+            value: '{{ .host_header }}'
+  core-taximeter-proxy:
+    extends: generic
+    config:
+      l7_upstream_macro:
+        matcher:
+          host_re: core\.taximeter\..*
+        headers:
+        - copy:
+            source: Host
+            target: X-YProxy-Header-Host
+            keep_existing: false
+        - create:
+            target: X-Forwarded-For-Y
+            func: realip
+        - create:
+            target: X-YProxy
+            value: 'true'
+            keep_existing: false
+        - create:
+            target: X-NginX-Proxy
+            value: 'true'
+            keep_existing: false
+        - create:
+            target: Host
+            value: '{{ .host_header }}'
+            keep_existing: false
+        - create:
+            target: X-Real-IP
+            func: realip
+        - create:
+            target: X-Forwarded-For
+            func: realip
+        flat_scheme:
+          balancer:
+            protocol: HTTP2
+            attempts: 2
+            fast_attempts: 2
+            max_reattempts_share: 0.15
+            max_pessimized_endpoints_share: 0.2
+            allow_retries_to_same_instance: true
+            health_indicators_preset: DISABLE_PASSIVE_AND_SD_CHECKS
+            retry_http_responses:
+              codes:
+              - 5xx
+            backend_timeout: 10s
+            connect_timeout: 1s
+            use_https_to_endpoints:
+              disable_sni: false
+            keepalive_count: 100
+          on_error:
+            static:
+              status: 504
+              content: Service unavailable
+  dev-appboost:
+    extends: common2tvm
+    config:
+      l7_upstream_macro:
+        headers:
+        - create:
+            target: X-Forwarded-For
+            func: realip
+        - create:
+            target: X-Real-IP
+            func: realip
+        - create:
+            target: X-Forwarded-Proto
+            func: scheme
+        - create:
+            target: X-Forwarded-Protocol
+            func: scheme
+        - create:
+            target: X-Request-Id
+            keep_existing: true
+            func: reqid
+  driversupport:
+    extends: common1sethost
+    config:
+      l7_upstream_macro:
+        matcher:
+          any: false
+          or_:
+          - path_re: /webview/driver-support(/.*)?
+          - path_re: /webview-driver-support-api(/.*)?
+          - path_re: /new-webview-driver-support-api(/.*)?
+          - path_re: /api/driver-support(/.*)?
+          - path_re: /s3/.*
+        headers:
+        - create:
+            target: X-Balancer-Tvm-Service-Ticket
+            func: tvm_service_ticket:{{ .tvm_service_ticket }}
+        - create:
+            target: X-Real-IP
+            func: realip
+  fb-yango-team:
+    extends: common2tvm
+    config:
+      l7_upstream_macro:
+        headers:
+        - create:
+            target: X-Forwarded-For
+            func: realip
+        - create:
+            target: X-Forwarded-Proto
+            func: scheme
+        - create:
+            target: X-Real-Ip
+            func: realip
+        - create:
+            target: X-Request-Id
+            func: reqid
+  femida:
+    extends: common1tvm
+    config:
+      l7_upstream_macro:
+        headers:
+        - create:
+            target: X-Forwarded-For
+            func: realip
+        - create:
+            target: X-Real-Ip
+            func: realip
+        flat_scheme:
+          balancer:
+            backend_timeout: 60s
+  files-messenger:
+    extends: common1sethost
+    config:
+      l7_upstream_macro:
+        headers:
+        - create:
+            target: X-Balancer-Tvm-Service-Ticket
+            func: tvm_service_ticket:{{ .tvm_service_ticket }}
+        - create:
+            target: X-Forwarded-For
+            func: realip
+        - create:
+            target: X-Real-IP
+            func: realip
+        - create:
+            target: X-Source-Port-Y
+            func: realport
+        - create:
+            target: X-Forwarded-Host
+            func: host
+        - create:
+            target: X-Forwarded-Proto
+            func: scheme
+        - create:
+            target: X-Request-Id
+            func: reqid
+        - create:
+            target: X-Start-Time
+            func: starttime
+        - copy:
+            target: X-Req-Id
+            source: X-Request-Id
+  fincab-yango-team:
+    extends: common2
+    config:
+      l7_upstream_macro:
+        flat_scheme:
+          balancer:
+            backend_timeout: 60s
+  forms-yango-team:
+    extends: common2tvm
+    config:
+      l7_upstream_macro:
+        headers:
+        - create:
+            target: X-Forwarded-For
+            func: realip
+        - create:
+            target: X-Real-IP
+            func: realip
+        - create:
+            target: X-Forwarded-Proto
+            func: scheme
+        - create:
+            target: X-Req-Id
+            func: reqid
+  forms:
+    extends: common2tvm
+    config:
+      l7_upstream_macro:
+        headers:
+        - create:
+            target: X-Forwarded-For
+            func: realip
+        - create:
+            target: X-Real-IP
+            func: realip
+        - create:
+            target: X-Forwarded-Proto
+            func: scheme
+  front-messenger:
+    extends: common1sethost
+    config:
+      l7_upstream_macro:
+        headers:
+        - create:
+            target: X-Balancer-Tvm-Service-Ticket
+            func: tvm_service_ticket:{{ .tvm_service_ticket }}
+  gps-taximeter-proxy:
+    extends: generic
+    config:
+      l7_upstream_macro:
+        matcher:
+          host_re: gps\.taximeter\..*
+        headers:
+        - copy:
+            source: Host
+            target: X-YProxy-Header-Host
+            keep_existing: false
+        - create:
+            target: X-Forwarded-For-Y
+            func: realip
+        - create:
+            target: X-YProxy
+            value: 'true'
+            keep_existing: false
+        - create:
+            target: X-NginX-Proxy
+            value: 'true'
+            keep_existing: false
+        - create:
+            target: Host
+            value: '{{ .host_header }}'
+            keep_existing: false
+        - create:
+            target: X-Real-IP
+            func: realip
+        - create:
+            target: X-Forwarded-For
+            func: realip
+        flat_scheme:
+          balancer:
+            protocol: HTTP2
+            attempts: 2
+            fast_attempts: 2
+            max_reattempts_share: 0.15
+            max_pessimized_endpoints_share: 0.2
+            allow_retries_to_same_instance: true
+            health_indicators_preset: DISABLE_PASSIVE_AND_SD_CHECKS
+            retry_http_responses:
+              codes:
+              - 5xx
+            backend_timeout: 10s
+            connect_timeout: 1s
+            use_https_to_endpoints:
+              disable_sni: false
+            keepalive_count: 100
+          on_error:
+            static:
+              status: 504
+              content: Service unavailable
+  help-yango-team:
+    extends: common2tvmtaxisethost
+    config:
+      l7_upstream_macro:
+        headers:
+        - create:
+            target: X-Forwarded-For
+            func: realip
+        - create:
+            target: X-Client-Real-Ip
+            func: realip
+        - create:
+            target: X-Forwarded-Proto
+            func: scheme
+        - create:
+            target: X-Request-Id
+            func: reqid
+        - copy:
+            target: X-Original-Request-Id
+            source: X-Request-Id
+  media-adv:
+    extends: common2tvm
+    config:
+      l7_upstream_macro:
+        headers:
+        - create:
+            target: X-Start-Time
+            func: starttime
+        - create:
+            target: X-Req-Id
+            func: reqid
+        - create:
+            target: X-Balancer-IP
+            func: localip
+        - create:
+            target: X-Balancer-Port
+            func: localport
+        - create:
+            target: X-Yandex-Ja3
+            func: ja3
+        - create:
+            target: X-Yandex-Ja4
+            func: ja4
+        - create:
+            target: X-Yandex-P0f
+            func: p0f
+        - create:
+            target: Host
+            value: '{{ .host_header }}'
+        - create:
+            target: X-Market-Req-ID
+            keep_existing: true
+            func: market_reqid
+        - create:
+            target: X-Yandex-RandomUID
+            keep_existing: true
+            func: yuid
+        - create:
+            target: X-YandexUID
+            keep_existing: true
+            func: yuid
+        - create:
+            target: X-Forwarded-For
+            keep_existing: true
+            func: realip
+        - create:
+            target: X-Real-Ip
+            keep_existing: true
+            func: realip
+        - create:
+            target: X-Source-Port-Y
+            keep_existing: true
+            func: realport
+        - create:
+            target: X-Market-Original-Host
+            keep_existing: true
+            func: host
+        - create:
+            target: Y-Service
+            value: market
+  media:
+    extends: common1tvm
+    config:
+      l7_upstream_macro:
+        headers:
+        - create:
+            target: X-Request-Id
+            func: reqid
+        - create:
+            target: X-Start-Time
+            func: starttime
+        - create:
+            target: X-Forwarded-Proto
+            func: scheme
+        - create:
+            target: X-Forwarded-Host
+            func: host
+        - create:
+            target: X-Real-IP
+            func: realip
+        - create:
+            target: X-Request-Host
+            func: host
+  office-maps-yango-team:
+    extends: common2tvmtaxi
+    config:
+      l7_upstream_macro:
+        headers:
+        - create:
+            target: X-Forwarded-For
+            func: realip
+  partner-yango:
+    extends: common2
+    config:
+      l7_upstream_macro:
+        headers:
+        - create:
+            target: X-Real-Port
+            func: localport
+        - create:
+            target: X-Real-IP
+            func: realip
+        - create:
+            target: X-Real-Scheme
+            func: scheme
+        - create:
+            target: X-Partner-Source
+            value: yango
+  public-tray:
+    extends: common2tvmtaxisethost
+    config:
+      l7_upstream_macro:
+        headers:
+        - create:
+            target: X-Request-ID
+            func: reqid
+        - create:
+            target: X-Forwarded-For
+            func: realip
+  quantum-yango-team:
+    extends: common2tvm
+    config:
+      l7_upstream_macro:
+        headers:
+        - create:
+            target: X-Forwarded-Proto
+            func: scheme
+        - create:
+            target: X-Request-Id
+            func: reqid
+  review-yango-team:
+    extends: common2tvm
+    config:
+      l7_upstream_macro:
+        headers:
+        - create:
+            target: X-Forwarded-For
+            func: realip
+        - create:
+            target: X-Client-Real-Ip
+            func: realip
+        - create:
+            target: X-Real-Ip
+            func: realip
+        - create:
+            target: X-Forwarded-Proto
+            func: scheme
+        - create:
+            target: X-Request-Id
+            func: reqid
+        flat_scheme:
+          balancer:
+            backend_timeout: 60s
+  staff-webauth-pythia:
+    extends: common2tvm
+    config:
+      l7_upstream_macro:
+        headers:
+        - create:
+            target: X-Req-Id
+            func: reqid
+        - create:
+            target: X-Forwarded-Proto
+            func: scheme
+        - create:
+            target: X-Forwarded-For
+            func: realip
+        - create:
+            target: X-Forwarded-Host
+            func: host
+  staff-yango-team:
+    extends: common2tvm
+    config:
+      l7_upstream_macro:
+        headers:
+        - create:
+            target: X-Forwarded-For
+            func: realip
+        - create:
+            target: X-Client-Real-Ip
+            func: realip
+        - create:
+            target: X-Forwarded-Proto
+            func: scheme
+        - create:
+            target: X-Real-Ip
+            func: realip
+        - create:
+            target: X-Request-Id
+            func: reqid
+        - copy:
+            target: X-Original-Request-Id
+            source: X-Request-Id
+        response_headers:
+        - copy_from_request:
+            target: X-Yandex-Internal-Request
+            source: X-Yandex-Internal-Request
+  startrek:
+    extends: common1
+    config:
+      l7_upstream_macro:
+        flat_scheme:
+          balancer:
+            backend_timeout: 600s
+            backend_read_timeout: 600s
+            backend_write_timeout: 600s
+        headers:
+        - create:
+            target: X-Forwarded-For
+            func: realip
+        - create:
+            target: X-Request-Id
+            func: reqid
+        - create:
+            target: X-Forwarded-Proto
+            func: scheme
+        - create:
+            target: X-Real-IP
+            func: realip
+        - create:
+            target: X-Forwared-Host
+            func: host
+  suggest-multi:
+    extends: common1sethost
+    config:
+      l7_upstream_macro:
+        response_headers:
+        - create:
+            target: Access-Control-Allow-Credentials
+            value: 'true'
+  survey-yango-team:
+    extends: common2tvmtaxisethost
+    config:
+      l7_upstream_macro:
+        headers:
+        - create:
+            target: X-Forwarded-For
+            func: realip
+        - create:
+            target: X-Client-Real-Ip
+            func: realip
+        - create:
+            target: X-Forwarded-Proto
+            func: scheme
+        - create:
+            target: X-Request-Id
+            func: reqid
+        - copy:
+            target: X-Original-Request-Id
+            source: X-Request-Id
+  taxi-taximeter-proxy:
+    extends: generic
+    config:
+      l7_upstream_macro:
+        matcher:
+          any: true
+        headers:
+        - create:
+            target: X-Real-IP
+            func: realip
+        - create:
+            target: X-Forwarded-Host
+            func: host
+        flat_scheme:
+          balancer:
+            protocol: HTTP2
+            attempts: 2
+            fast_attempts: 2
+            max_reattempts_share: 0.15
+            max_pessimized_endpoints_share: 0.2
+            allow_retries_to_same_instance: true
+            health_indicators_preset: DISABLE_PASSIVE_AND_SD_CHECKS
+            retry_http_responses:
+              codes:
+              - '504'
+            backend_timeout: 10s
+            connect_timeout: 1s
+            use_https_to_endpoints:
+              disable_sni: false
+            keepalive_count: 100
+          on_error:
+            static:
+              status: 504
+              content: Service unavailable
+  taxi-tc:
+    extends: common1
+    config:
+      l7_upstream_macro:
+        headers:
+        - create:
+            target: X-Real-Ip
+            func: realip
+        - create:
+            target: X-Forwarded-Host
+            func: host
+        flat_scheme:
+          balancer:
+            protocol: HTTP2
+  tc:
+    extends: generic
+    config:
+      l7_upstream_macro:
+        matcher:
+          host_re: tc\..*
+        headers:
+        - copy:
+            source: Host
+            target: X-YProxy-Header-Host
+            keep_existing: false
+        - create:
+            target: X-Forwarded-For-Y
+            func: realip
+        - create:
+            target: X-YProxy
+            value: 'true'
+            keep_existing: false
+        - create:
+            target: X-NginX-Proxy
+            value: 'true'
+            keep_existing: false
+        - create:
+            target: X-Real-IP
+            func: realip
+        - create:
+            target: X-Forwarded-For
+            func: realip
+        flat_scheme:
+          balancer:
+            protocol: HTTP2
+            attempts: 2
+            fast_attempts: 2
+            max_reattempts_share: 0.15
+            max_pessimized_endpoints_share: 0.2
+            health_indicators_preset: DISABLE_PASSIVE_AND_SD_CHECKS
+            retry_http_responses:
+              codes:
+              - 5xx
+            backend_timeout: 10s
+            connect_timeout: 1s
+            use_https_to_endpoints:
+              disable_sni: false
+            keepalive_count: 100
+            allow_retries_to_same_instance: true
+          on_error:
+            static:
+              status: 504
+              content: Service unavailable
+  tools-messenger:
+    extends: common1sethost
+    config:
+      l7_upstream_macro:
+        headers:
+        - create:
+            target: X-Balancer-Tvm-Service-Ticket
+            func: tvm_service_ticket:{{ .tvm_service_ticket }}
+  trip-yango-team:
+    extends: common2tvmtaxi
+    config:
+      l7_upstream_macro:
+        headers:
+        - create:
+            target: X-Forwarded-For
+            func: realip
+        response_headers:
+        - create:
+            target: X-Frame-Options
+            value: DENY
+        - create:
+            target: X-Content-Type-Options
+            value: nosniff
+        flat_scheme:
+          balancer:
+            protocol: HTTP1
+            attempts: 2
+            fast_attempts: 2
+            max_reattempts_share: 0.15
+            max_pessimized_endpoints_share: 0.2
+            allow_retries_to_same_instance: true
+            health_indicators_preset: DISABLE_PASSIVE_AND_SD_CHECKS
+            backend_timeout: 30s
+            connect_timeout: 3s
+            use_https_to_endpoints:
+              disable_sni: false
+            keepalive_count: 100
+          on_error:
+            static:
+              status: 504
+              content: Service unavailable
+  yango-pay-webview:
+    extends: common2tvmtaxi
+    config:
+      l7_upstream_macro:
+        headers:
+        - create:
+            func: realip
+            target: x-real-ip
+        - create:
+            func: realip
+            target: x-remote-ip
+        - create:
+            func: realip
+            target: x-forwarded-for
+        - create:
+            func: scheme
+            target: x-forwarded-proto
+        - create:
+            func: host
+            target: x-forwarded-host
+        flat_scheme:
+          balancer:
+            backend_timeout: 60s
+  yteam-yango-com:
+    extends: common1
+    config:
+      l7_upstream_macro:
+        headers:
+        - create:
+            target: X-Forwarded-For
+            func: realip
+        - create:
+            target: X-Real-Ip
+            func: realip
+        - create:
+            target: X-Forwarded-Proto
+            func: scheme

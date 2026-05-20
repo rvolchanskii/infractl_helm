@@ -1,0 +1,31 @@
+suite: puncher ruleset request toggle
+release:
+  name: release-name
+values:
+  - ../values-example.yaml
+templates:
+  - templates/PuncherRuleSetProxyToLB.yaml
+tests:
+  - it: disable rules for a single domain
+    set:
+      domains:
+        "customtest1.taxi.tst.yandex.net":
+          request_puncher_rules: false
+    asserts:
+      - hasDocuments:
+          count: 5
+---
+suite: puncher ruleset global disable
+release:
+  name: release-name
+values:
+  - ../values-example.yaml
+templates:
+  - templates/PuncherRuleSetProxyToLB.yaml
+tests:
+  - it: disable all puncher rules
+    set:
+      override_defaults.request_puncher_rules: false
+    asserts:
+      - hasDocuments:
+          count: 0

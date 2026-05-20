@@ -1,0 +1,56 @@
+suite: resolveUpstreamTemplate header dedup
+release:
+  name: dedup-release
+values:
+  - ../values-example.yaml
+set:
+  l7_upstream_templates:
+    base:
+      config:
+        l7_upstream_macro:
+          headers:
+            - create:
+                target: X-Common
+                value: base
+            - create:
+                target: X-Dupl
+                value: base
+    mid:
+      extends: base
+      config:
+        l7_upstream_macro:
+          headers:
+            - create:
+                target: X-Dupl
+                value: mid
+    top:
+      extends: mid
+      config:
+        l7_upstream_macro:
+          headers:
+            - create:
+                target: X-Dupl
+                value: top
+  domains:
+    dup.test:
+      shadow_fqdns:
+        - dup.test
+      target_fqdn: dup.backend
+      l7_upstream_template: top
+templates:
+  - templates/AwacsUpstream.yaml
+tests:
+  - it: headers from chain deduplicated
+    documentSelector:
+      path: metadata.name
+      value: dup-backend-443-top-2d7f7791
+    asserts:
+      - equal:
+          path: spec.upstream_spec.yandex_balancer.config.l7_upstream_macro.headers
+          value:
+            - create:
+                target: X-Common
+                value: base
+            - create:
+                target: X-Dupl
+                value: top

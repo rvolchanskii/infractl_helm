@@ -1,0 +1,107 @@
+suite: upstream configuration
+release:
+  name: release-name
+values:
+  - ../values-example.yaml
+templates:
+  - templates/AwacsUpstream.yaml
+tests:
+  - it: common-one-attempt config
+    documentSelector:
+      path: metadata.name
+      value: api-taxi-tst-yandex-net-443-common-one-attempt-90b19a18
+    asserts:
+      - equal:
+          path: spec.upstream_spec.backends.instances[0].host
+          value: api.taxi.tst.yandex.net
+      - equal:
+          path: spec.upstream_spec.backends.instances[0].port
+          value: 443
+      - equal:
+          path: spec.upstream_spec.yandex_balancer.config.l7_upstream_macro.flat_scheme.balancer.attempts
+          value: 1
+  - it: common-two-attempts config
+    documentSelector:
+      path: metadata.name
+      value: ya-ru-443-common-two-attempts-90b19a18
+    asserts:
+      - equal:
+          path: spec.upstream_spec.backends.instances[0].host
+          value: ya.ru
+      - equal:
+          path: spec.upstream_spec.backends.instances[0].port
+          value: 443
+      - equal:
+          path: spec.upstream_spec.yandex_balancer.config.l7_upstream_macro.flat_scheme.balancer.attempts
+          value: 2
+      - contains:
+          path: spec.upstream_spec.yandex_balancer.config.l7_upstream_macro.headers
+          content:
+            create:
+              target: X-Ya-Header1
+              value: asdqwe1
+  - it: custom port 442
+    documentSelector:
+      path: metadata.name
+      value: ya-ru-442-common-two-attempts-90b19a18
+    asserts:
+      - equal:
+          path: spec.upstream_spec.backends.instances[0].port
+          value: 442
+  - it: special headers template
+    documentSelector:
+      path: metadata.name
+      value: ya-ru-443-common-two-attempts-special-headers-90b19a18
+    asserts:
+      - contains:
+          path: spec.upstream_spec.yandex_balancer.config.l7_upstream_macro.headers
+          content:
+            create:
+              target: X-Ya-Header2
+              value: asdqwe2
+  - it: headers override template
+    documentSelector:
+      path: metadata.name
+      value: ya-ru-443-common-two-attempts-very-special-headers-override-90b19a18
+    asserts:
+      - contains:
+          path: spec.upstream_spec.yandex_balancer.config.l7_upstream_macro.headers
+          content:
+            create:
+              target: X-Ya-Header2
+              value: 123qwe
+  - it: very special headers template
+    documentSelector:
+      path: metadata.name
+      value: ya-ru-443-common-two-attempts-very-special-headers-90b19a18
+    asserts:
+      - contains:
+          path: spec.upstream_spec.yandex_balancer.config.l7_upstream_macro.headers
+          content:
+            create:
+              target: X-Ya-Header3
+              value: asdqwe3
+  - it: custom config port 80
+    documentSelector:
+      path: metadata.name
+      value: api-taxi-tst-yandex-net-80-custom-ca41a6a6-90b19a18
+    asserts:
+      - equal:
+          path: spec.upstream_spec.backends.instances[0].port
+          value: 80
+  - it: custom config attempts 1
+    documentSelector:
+      path: metadata.name
+      value: api-taxi-tst-yandex-net-443-custom-ca41a6a6-90b19a18
+    asserts:
+      - equal:
+          path: spec.upstream_spec.yandex_balancer.config.l7_upstream_macro.flat_scheme.balancer.attempts
+          value: 1
+  - it: custom config attempts 3
+    documentSelector:
+      path: metadata.name
+      value: api-taxi-tst-yandex-net-443-custom-75311235-90b19a18
+    asserts:
+      - equal:
+          path: spec.upstream_spec.yandex_balancer.config.l7_upstream_macro.flat_scheme.balancer.attempts
+          value: 3

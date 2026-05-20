@@ -1,0 +1,9 @@
+# YANGOCLOUD-1877
+tools-messenger:
+  extends: common1sethost
+  config:
+    l7_upstream_macro:
+      headers:
+        - create:
+            target: X-Balancer-Tvm-Service-Ticket
+            func: tvm_service_ticket:{{ .tvm_service_ticket }}

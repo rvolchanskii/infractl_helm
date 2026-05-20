@@ -1,0 +1,170 @@
+suite: extended upstream config
+release:
+  name: rel-ext
+values:
+  - ../values-example.yaml
+set:
+  l7_upstream_templates:
+    my-base:
+      extends: generic
+      config:
+        l7_upstream_macro:
+          headers:
+            - copy:
+                target: X-Forwarded-Y-Host
+                source: Host
+            - create:
+                target: X-Base
+                value: baseval
+          flat_scheme:
+            balancer:
+              attempts: 1
+    my-mid:
+      extends: my-base
+      config:
+        l7_upstream_macro:
+          headers:
+            - create:
+                target: X-Mid
+                value: midval
+          flat_scheme:
+            balancer:
+              attempts: 2
+    my-tvm:
+      extends: my-mid
+      config:
+        l7_upstream_macro:
+          headers:
+            - create:
+                target: X-Ya-Ticket
+                func: tvm_service_ticket:{{ .tvm_service_ticket }}
+    my-host:
+      extends: my-tvm
+      config:
+        l7_upstream_macro:
+          headers:
+            - create:
+                target: Host
+                value: '{{ .host_header }}'
+  domains:
+    base.test:
+      shadow_fqdns:
+        - base.test
+      target_fqdn: base.backend
+      l7_upstream_template: my-base
+    mid.test:
+      shadow_fqdns:
+        - mid.test
+      target_fqdn: mid.backend
+      target_port: 8080
+      l7_upstream_template: my-mid
+    final.test:
+      shadow_fqdns:
+        - final.test
+      target_fqdn: final.backend
+      tvm_service_ticket: '333'
+      host_header: header.final
+      order: 5000
+      l7_upstream_template: my-host
+    direct.test:
+      shadow_fqdns:
+        - direct.test
+      target_fqdn: direct.backend
+      tvm_service_ticket: '444'
+      host_header: direct.host
+      l7_upstream_config:
+        l7_upstream_macro:
+          headers:
+            - create:
+                target: X-Direct
+                func: tvm_service_ticket:444
+            - create:
+                target: Host
+                value: direct.host
+          flat_scheme:
+            balancer:
+              attempts: 5
+templates:
+  - templates/AwacsUpstream.yaml
+tests:
+  - it: renders 16 unique upstreams
+    asserts:
+      - hasDocuments:
+          count: 16
+  - it: base template config
+    documentSelector:
+      path: metadata.name
+      value: base-backend-443-my-base-67132ce4
+    asserts:
+      - equal:
+          path: spec.upstream_spec.yandex_balancer.config.l7_upstream_macro.flat_scheme.balancer.attempts
+          value: 1
+      - contains:
+          path: spec.upstream_spec.yandex_balancer.config.l7_upstream_macro.headers
+          content:
+            copy:
+              target: X-Forwarded-Y-Host
+              source: Host
+      - contains:
+          path: spec.upstream_spec.yandex_balancer.config.l7_upstream_macro.headers
+          content:
+            create:
+              target: X-Base
+              value: baseval
+  - it: mid template custom port
+    documentSelector:
+      path: metadata.name
+      value: mid-backend-8080-my-mid-67132ce4
+    asserts:
+      - equal:
+          path: spec.upstream_spec.backends.instances[0].port
+          value: 8080
+      - equal:
+          path: spec.upstream_spec.yandex_balancer.config.l7_upstream_macro.flat_scheme.balancer.attempts
+          value: 2
+      - contains:
+          path: spec.upstream_spec.yandex_balancer.config.l7_upstream_macro.headers
+          content:
+            create:
+              target: X-Mid
+              value: midval
+  - it: final template chain with host and ticket
+    documentSelector:
+      path: metadata.name
+      value: final-backend-443-my-host-9e8eecf3
+    asserts:
+      - equal:
+          path: spec.upstream_spec.labels.order
+          value: "5000"
+      - contains:
+          path: spec.upstream_spec.yandex_balancer.config.l7_upstream_macro.headers
+          content:
+            create:
+              target: X-Ya-Ticket
+              func: tvm_service_ticket:333
+      - contains:
+          path: spec.upstream_spec.yandex_balancer.config.l7_upstream_macro.headers
+          content:
+            create:
+              target: Host
+              value: header.final
+  - it: direct config with tpl vars
+    documentSelector:
+      path: metadata.name
+      value: direct-backend-443-custom-5f42c909-86fe7268
+    asserts:
+      - equal:
+          path: spec.upstream_spec.yandex_balancer.config.l7_upstream_macro.flat_scheme.balancer.attempts
+          value: 5
+      - contains:
+          path: spec.upstream_spec.yandex_balancer.config.l7_upstream_macro.headers
+          content:
+            create:
+              target: X-Direct
+              func: tvm_service_ticket:444
+      - contains:
+          path: spec.upstream_spec.yandex_balancer.config.l7_upstream_macro.headers
+          content:
+            create:
+              target: Host
+              value: direct.host

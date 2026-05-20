@@ -1,0 +1,8 @@
+# proxy /.well-known/assetlinks.json for google site domain validation
+assetlinks:
+  extends: common2sethost
+  config:
+    l7_upstream_macro:
+      matcher:
+        any: false
+        url_re: /\.well-known/assetlinks\.json

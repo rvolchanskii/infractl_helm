@@ -1,0 +1,92 @@
+suite: upstream names uniqueness
+release:
+  name: release-name
+values:
+  - ../values-example.yaml
+templates:
+  - templates/AwacsUpstream.yaml
+tests:
+  - it: should render exactly 12 unique upstreams
+    asserts:
+      - hasDocuments:
+          count: 12
+  - it: upstream api-taxi-tst-yandex-net-443-common-one-attempt exists once
+    documentSelector:
+      path: metadata.name
+      value: api-taxi-tst-yandex-net-443-common-one-attempt-90b19a18
+    asserts:
+      - hasDocuments:
+          count: 1
+          filterAware: true
+  - it: upstream ya-ru-443-common-two-attempts exists once
+    documentSelector:
+      path: metadata.name
+      value: ya-ru-443-common-two-attempts-90b19a18
+    asserts:
+      - hasDocuments:
+          count: 1
+          filterAware: true
+  - it: upstream ya-ru-442-common-two-attempts exists once
+    documentSelector:
+      path: metadata.name
+      value: ya-ru-442-common-two-attempts-90b19a18
+    asserts:
+      - hasDocuments:
+          count: 1
+          filterAware: true
+  - it: upstream ya-ru-443-common-two-attempts-special-headers exists once
+    documentSelector:
+      path: metadata.name
+      value: ya-ru-443-common-two-attempts-special-headers-90b19a18
+    asserts:
+      - hasDocuments:
+          count: 1
+          filterAware: true
+  - it: upstream ya-ru-443-common2sethost exists once
+    documentSelector:
+      path: metadata.name
+      value: ya-ru-443-common2sethost-26c95fa6
+    asserts:
+      - hasDocuments:
+          count: 1
+          filterAware: true
+  - it: upstream ya-ru-443-common-two-attempts-very-special-headers exists once
+    documentSelector:
+      path: metadata.name
+      value: ya-ru-443-common-two-attempts-very-special-headers-90b19a18
+    asserts:
+      - hasDocuments:
+          count: 1
+          filterAware: true
+  - it: upstream ya-ru-443-common-two-attempts-very-special-headers-override exists once
+    documentSelector:
+      path: metadata.name
+      value: ya-ru-443-common-two-attempts-very-special-headers-override-90b19a18
+    asserts:
+      - hasDocuments:
+          count: 1
+          filterAware: true
+  - it: upstream api-taxi-tst-yandex-net-80-custom-ca41a6a6 exists once
+    documentSelector:
+      path: metadata.name
+      value: api-taxi-tst-yandex-net-80-custom-ca41a6a6-90b19a18
+    asserts:
+      - hasDocuments:
+          count: 1
+          filterAware: true
+  - it: upstream api-taxi-tst-yandex-net-443-custom-ca41a6a6 exists once
+    documentSelector:
+      path: metadata.name
+      value: api-taxi-tst-yandex-net-443-custom-ca41a6a6-90b19a18
+    asserts:
+      - hasDocuments:
+          count: 1
+          filterAware: true
+  - it: upstream api-taxi-tst-yandex-net-443-custom-75311235 exists once
+    documentSelector:
+      path: metadata.name
+      value: api-taxi-tst-yandex-net-443-custom-75311235-90b19a18
+    asserts:
+      - hasDocuments:
+          count: 1
+          filterAware: true

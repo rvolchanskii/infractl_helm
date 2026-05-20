@@ -1,0 +1,17 @@
+partner-yango:
+  extends: common2
+  config:
+    l7_upstream_macro:
+      headers:
+      - create:
+          target: X-Real-Port
+          func: localport
+      - create:
+          target: X-Real-IP
+          func: realip
+      - create:
+          target: X-Real-Scheme
+          func: scheme
+      - create:
+          target: X-Partner-Source
+          value: yango

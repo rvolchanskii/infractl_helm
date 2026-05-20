@@ -1,0 +1,97 @@
+{{- include "generic.require_tvm_settings_vars" . }}
+{{- include "generic.require_tvm_for_logging" . }}
+{{- include "generic.require_valid_extends" .Values.balancer_config_templates }}
+{{- include "generic.require_no_recursive_extends" .Values.balancer_config_templates }}
+{{- include "generic.require_extends_depth_limit" .Values.balancer_config_templates }}
+apiVersion: k.yandex-team.ru/v1
+kind: AwacsBalancer
+metadata:
+  name: {{ include "generic.require_k8s_name_len" (include "generic.l7_balancer_name" .) }}
+  namespace: {{ .Values.infractl_namespace }}
+spec:
+  balancer_spec:
+    components:
+      {{- range $key, $component := .Values.components }}
+      {{ $key }}:
+        state: {{ $component.state | quote }}
+        {{- if $component.version }}
+        version: {{ $component.version | quote }}
+        {{- end }}
+      {{- end }}
+    config_transport:
+      nanny_static_file:
+        instance_tags:
+          ctype: {{ include "generic.instance_tags_ctype" . }}
+          itype: balancer
+          prj: {{ include "generic.awacs_namespace_name" . }}
+        service_id: {{ include "generic.l7_balancer_service_id" . }}
+        snapshotPriority: {{ default "NORMAL" .Values.override_defaults.nanny_snapshot_priority }}
+    ctl_version: {{ default 6 .Values.override_defaults.ctl_version }}
+    deploy_project: {{ include "generic.deploy_project" . }}
+    env_type: L7_ENV_{{ upper .Values.environment }}
+    hq_disabled: true
+    monitoring_settings:
+      enabled: ENABLED
+      monitoring_project: {{ include "generic.monitoring_project" . }}
+      monitoring_type: {{ default "MONITORING_ONLY" .Values.override_defaults.monitoringType }}
+    otelSettings:
+      collector: {{ dig "override_defaults" "otel_settings" "collector" "DEFAULT" (.Values | merge (dict)) }}
+      enabled: {{ dig "override_defaults" "otel_settings" "enabled" "DISABLED" (.Values | merge (dict)) }}
+      monitoringProject: {{ include "generic.monitoring_project" . }}
+      settings:
+        addMetaToSpanAttributes: true
+        attributes:
+          {{- $attrs := dig "override_defaults" "otel_settings" "attributes" (dict) (.Values | merge (dict)) }}
+          {{- range $key, $value := $attrs }}
+            {{ $key }}: {{ $value | quote }}
+          {{- end }}
+        extraSpans:
+          - proxy
+      batchFlushPeriod: ""
+      batchLimitBytes: {{ dig "override_defaults" "otel_settings" "batch_limit_bytes" 0 (.Values | merge (dict)) }}
+      maxBytesPerIncomingRequest: {{ dig "override_defaults" "otel_settings" "max_bytes_per_incoming_request" 0 (.Values | merge (dict)) }}
+    traffic_source: {{ include "generic.traffic_source" . }}
+    tvm_settings:
+      enabled: {{ .Values.tvm_settings.enabled }}
+      {{- if eq .Values.tvm_settings.enabled "ENABLED" }}
+      client_secret_key: {{ .Values.tvm_settings.client_secret_key }}
+      delegation_token: {{ .Values.tvm_settings.delegation_token }}
+      secret_id: {{ .Values.tvm_settings.secret_id }}
+      secret_name: {{ .Values.tvm_settings.secret_name }}
+      secret_ver: {{ .Values.tvm_settings.secret_ver }}
+      tvm_client_id: {{ .Values.tvm_settings.tvm_client_id }}
+      {{- end }}
+    {{- if .Values.logbroker_topic }}
+    log_settings:
+      enabled: ENABLED
+      type: CUSTOM_LB_TOPIC
+      logbroker_config:
+        topic: {{ .Values.logbroker_topic }}
+      connection_type: SECURE
+      engine: LOGBROKER
+    {{- end }}
+    yandex_balancer:
+      config:
+        {{- $cfg := deepCopy (default dict .Values.balancer.config) }}
+        {{- if .Values.balancer.config_template }}
+          {{- $resolved := include "resolveBalancerConfigTemplate" (dict "name" .Values.balancer.config_template "templates" .Values.balancer_config_templates) | fromYaml }}
+          {{- $antirobot := include "generic.antirobot_params" . | fromYaml }}
+          {{- $tpl_context := merge (dict "antirobot_service" $antirobot.service "antirobot_req_group" $antirobot.req_group) (deepCopy .) }}
+          {{- $tmp := tpl (toYaml $resolved.config) $tpl_context | fromYaml }}
+          {{- $cfg = mergeOverwrite $cfg $tmp }}
+        {{- end }}
+        {{- toYaml $cfg | nindent 8 }}
+      mode: {{ default "EASY_MODE" .Values.override_defaults.mode }}
+      system:
+        {{- $location := include "generic.location" . | fromYaml }}
+        location:
+          node_segment_info:
+            node_segment: {{ $location.node_segment }}
+            short_dc:
+              city: {{ $location.city }}
+              country: {{ $location.country }}
+              country_code: {{ $location.country_code }}
+              provider: {{ $location.provider }}
+          type: YP_CLUSTER
+          yp_cluster: {{ $location.yp_cluster }}
+  namespace_id: {{ include "generic.awacs_namespace_name" . }}

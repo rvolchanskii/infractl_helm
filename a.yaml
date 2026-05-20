@@ -1,0 +1,8 @@
+service: experimental_projects_team
+title: AWS deployment config for Yango (infractl_helm)
+
+ci:
+  on-demand-auto:
+    - abs-paths: taxi/yango/infractl_helm/**
+    - abs-paths: taxi/yango/aws-taxi-rtc/**
+    - abs-paths: taxi/yango/aws-verdego-rtc/**

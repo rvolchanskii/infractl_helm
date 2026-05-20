@@ -1,0 +1,64 @@
+suite: network macro grants
+release:
+  name: release-name
+values:
+  - ../values-example.yaml
+templates:
+  - templates/NetworkMacro.yaml
+tests:
+  - it: default grants rendered
+    set:
+      override_defaults.network_macro_grants: null
+    asserts:
+      - equal:
+          path: spec.grants[0].role
+          value: BILLING
+      - equal:
+          path: spec.grants[0].slug
+          value: svc_quotastaxiinternational
+      - equal:
+          path: spec.grants[1].role
+          value: FW
+      - equal:
+          path: spec.grants[1].slug
+          value: role_svc_quotastaxiinternational_administration
+  - it: override grants
+    set:
+      override_defaults.network_macro_grants:
+        - role: BILLING
+          slug: svc_custom_bill
+        - role: FW
+          slug: svc_fw_one
+    asserts:
+      - equal:
+          path: spec.grants[0].slug
+          value: svc_custom_bill
+      - equal:
+          path: spec.grants[1].slug
+          value: svc_fw_one
+  - it: fails on invalid role
+    set:
+      override_defaults.network_macro_grants:
+        - role: ADMIN
+          slug: bad
+    asserts:
+      - failedTemplate:
+          errorPattern: "specifications"
+  - it: fails when more than one billing
+    set:
+      override_defaults.network_macro_grants:
+        - role: BILLING
+          slug: svc_a
+        - role: BILLING
+          slug: svc_b
+    asserts:
+      - failedTemplate:
+          errorPattern: "specifications"
+  - it: fails when no billing
+    set:
+      override_defaults.network_macro_grants:
+        - role: FW
+          slug: svc_only
+    asserts:
+      - failedTemplate:
+          errorPattern: "specifications"

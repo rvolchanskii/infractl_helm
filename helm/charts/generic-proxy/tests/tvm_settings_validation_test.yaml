@@ -1,0 +1,27 @@
+suite: tvm settings validation
+release:
+  name: release-name
+values:
+  - ../values-example.yaml
+templates:
+  - templates/AwacsBalancer.yaml
+tests:
+  - it: fails when tvm enabled but variables missing
+    set:
+      tvm_settings.enabled: ENABLED
+      tvm_settings.client_secret_key: ""
+      tvm_settings.delegation_token: ""
+      tvm_settings.secret_id: ""
+      tvm_settings.secret_name: ""
+      tvm_settings.secret_ver: ""
+      tvm_settings.tvm_client_id: ""
+    asserts:
+      - failedTemplate:
+          errorPattern: "tvm_settings"
+  - it: fails when logging is enabled but tvm is not
+    set:
+      tvm_settings.enabled: DISABLED
+      logbroker_topic: /taxi/test
+    asserts:
+      - failedTemplate:
+          errorPattern: "Logging"

@@ -1,0 +1,55 @@
+suite: balancer config template validations
+release:
+  name: release-name
+values:
+  - ../values-example.yaml
+templates:
+  - templates/AwacsBalancer.yaml
+tests:
+  - it: fails on unknown template parent
+    set:
+      balancer.config_template: bad
+      balancer_config_templates.bad.extends: unknown
+    asserts:
+      - failedTemplate:
+          errorPattern: "extends unknown template"
+  - it: fails on recursive template extends
+    set:
+      balancer.config_template: loop1
+      balancer_config_templates.loop1.extends: loop2
+      balancer_config_templates.loop2.extends: loop1
+    asserts:
+      - failedTemplate:
+          errorPattern: "recursive extends"
+  - it: fails on extends depth limit
+    set:
+      balancer.config_template: tmpl1
+      balancer_config_templates.tmpl1.extends: tmpl2
+      balancer_config_templates.tmpl2.extends: tmpl3
+      balancer_config_templates.tmpl3.extends: tmpl4
+      balancer_config_templates.tmpl4.extends: tmpl5
+      balancer_config_templates.tmpl5.extends: tmpl6
+      balancer_config_templates.tmpl6.extends: tmpl7
+      balancer_config_templates.tmpl7.extends: tmpl8
+      balancer_config_templates.tmpl8.extends: tmpl9
+      balancer_config_templates.tmpl9.extends: tmpl10
+      balancer_config_templates.tmpl10.extends: tmpl11
+      balancer_config_templates.tmpl11.extends: generic
+    asserts:
+      - failedTemplate:
+          errorPattern: "extends chain exceeds max depth"
+  - it: allows extends chain up to depth limit
+    set:
+      balancer.config_template: tmpl1
+      balancer_config_templates.tmpl1.extends: tmpl2
+      balancer_config_templates.tmpl2.extends: tmpl3
+      balancer_config_templates.tmpl3.extends: tmpl4
+      balancer_config_templates.tmpl4.extends: tmpl5
+      balancer_config_templates.tmpl5.extends: tmpl6
+      balancer_config_templates.tmpl6.extends: tmpl7
+      balancer_config_templates.tmpl7.extends: tmpl8
+      balancer_config_templates.tmpl8.extends: tmpl9
+      balancer_config_templates.tmpl9.extends: generic
+    asserts:
+      - hasDocuments:
+          count: 1

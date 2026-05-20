@@ -1,0 +1,7 @@
+fincab-yango-team:
+  extends: common2
+  config:
+    l7_upstream_macro:
+      flat_scheme:
+        balancer:
+          backend_timeout: 60s

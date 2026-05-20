@@ -1,0 +1,31 @@
+suite: network macro helpers
+release:
+  name: release-name
+values:
+  - ../values-example.yaml
+templates:
+  - templates/AwacsNamespace.yaml
+  - templates/NetworkMacro.yaml
+tests:
+  - it: default helper values
+    asserts:
+      - equal:
+          path: metadata.name
+          value: aws-rtc-taxi-release-name-balancer-testing-nets
+        template: templates/NetworkMacro.yaml
+      - equal:
+          path: spec.namespace_spec.allocation.preset_allocation.allocation_request.network_macro
+          value: _AWS_RTC_TAXI_RELEASE_NAME_BALANCER_TESTING_NETS_
+        template: templates/AwacsNamespace.yaml
+      - equal:
+          path: spec.parent
+          value: _AWS_RTC_TAXI_NETS_
+        template: templates/NetworkMacro.yaml
+  - it: override parent macro value
+    set:
+      override_defaults.parent_network_macro_name: _CUSTOM_PARENT_
+    asserts:
+      - equal:
+          path: spec.parent
+          value: _CUSTOM_PARENT_
+        template: templates/NetworkMacro.yaml

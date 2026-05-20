@@ -1,0 +1,23 @@
+media:
+  extends: common1tvm
+  config:
+    l7_upstream_macro:
+      headers:
+        - create:
+            target: X-Request-Id
+            func: reqid
+        - create:
+            target: X-Start-Time
+            func: starttime
+        - create:
+            target: X-Forwarded-Proto
+            func: scheme
+        - create:
+            target: X-Forwarded-Host
+            func: host
+        - create:
+            target: X-Real-IP
+            func: realip
+        - create:
+            target: X-Request-Host
+            func: host

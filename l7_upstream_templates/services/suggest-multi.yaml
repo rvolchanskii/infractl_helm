@@ -1,0 +1,9 @@
+# YANGOCLOUD-1777, YANGOCLOUD-1926
+suggest-multi:
+  extends: common1sethost
+  config:
+    l7_upstream_macro:
+      response_headers:
+        - create:
+            target: Access-Control-Allow-Credentials
+            value: "true"

@@ -1,0 +1,84 @@
+{{- $namespace_name := include "generic.awacs_namespace_name" . -}}
+{{- $values := merge (dict) .Values -}}
+{{- $override_defaults := default (dict) (index $values "override_defaults") -}}
+{{- $allocation_type := default "PRESET" (index $values "allocation_type") | upper -}}
+{{- $antiaffinity_constraints := include "generic.antiaffinity_constraints" . | fromYaml -}}
+{{- $degrade_params := include "generic.degrade_params" . | fromYaml -}}
+{{- $awacs_allocation := default (dict) (index $values "awacs_allocation") -}}
+{{- $awacs_pod_spec := default (dict) (index $awacs_allocation "pod_spec") -}}
+{{- $awacs_pod_spec_extra := omit $awacs_pod_spec "network_macro" -}}
+apiVersion: k.yandex-team.ru/v1
+kind: AwacsNamespace
+metadata:
+  name: {{ include "generic.require_k8s_name_len" $namespace_name }}
+  namespace: {{ .Values.infractl_namespace }}
+spec:
+  allocation:
+    mode: AUTO
+  category: {{ include "generic.category" . }}
+  deploy_project: {{ include "generic.deploy_project" . }}
+  monitoring_project: {{ include "generic.monitoring_project" . }}
+  description: {{ dig "balancer" "description" $namespace_name (.Values | merge (dict)) }}
+  namespace_spec:
+    allocation:
+      allocation_type: {{ $allocation_type }}
+      quota_abc: {{ default "42038" (index $override_defaults "quota_abc") }} {{/* quotastaxiaws */}}
+      {{- if eq $allocation_type "PRESET" }}
+      preset_allocation:
+        allocation_request:
+          network_macro: {{ include "generic.network_macro" . }}
+          preset:
+            storage_type: {{ default "SSD" .Values.allocation_preset_storage_type }}
+            type: {{ .Values.allocation_preset_type }}
+        per_balancer_settings:
+        - balancer_id: {{ include "generic.l7_balancer_id" . }}
+          env: L7_ENV_{{ .Values.environment | upper }}
+          location: {{ include "generic.l7_balancer_dc" . }}
+          pods: {{ .Values.number_of_pods }}
+        antiaffinity_constraints:
+          node_max_pods: {{ $antiaffinity_constraints.node_max_pods }}
+          rack_max_pods: {{ $antiaffinity_constraints.rack_max_pods }}
+        degrade_params:
+          max_unavailable_pods: {{ $degrade_params.max_unavailable_pods }}
+          min_update_delay_seconds: {{ $degrade_params.min_update_delay_seconds }}
+      {{- else if eq $allocation_type "AWACS" }}
+      awacs_allocation:
+        pod_spec:
+          network_macro: {{ default (include "generic.network_macro" .) (get $awacs_pod_spec "network_macro") }}
+          {{- if $awacs_pod_spec_extra }}
+{{ toYaml $awacs_pod_spec_extra | nindent 10 }}
+          {{- end }}
+        per_balancer_settings:
+        - balancer_id: {{ include "generic.l7_balancer_id" . }}
+          env: L7_ENV_{{ .Values.environment | upper }}
+          location: {{ include "generic.l7_balancer_dc" . }}
+          pods: {{ .Values.number_of_pods }}
+        antiaffinity_constraints:
+          node_max_pods: {{ $antiaffinity_constraints.node_max_pods }}
+          rack_max_pods: {{ $antiaffinity_constraints.rack_max_pods }}
+        degrade_params:
+          max_unavailable_pods: {{ $degrade_params.max_unavailable_pods }}
+          min_update_delay_seconds: {{ $degrade_params.min_update_delay_seconds }}
+      {{- else }}
+      {{- fail (printf "unsupported allocation_type %q, expected PRESET or AWACS" $allocation_type) }}
+      {{- end }}
+    balancer_constraints:
+      instance_tags:
+        prj: {{ $namespace_name }}
+    deploy_project: {{ include "generic.deploy_project" . }}
+    domain_settings: {}
+    easy_mode_settings:
+      l7_macro_only: true
+      l7_upstream_macro_only: true
+      non_sd_backends_creation_disabled: true
+      prohibit_explicit_dns_selector: true
+      prohibit_explicit_l3_selector: true
+    env_type: NS_ENV_{{ .Values.environment | upper }}
+    modules_whitelist: {{ include "generic.modules_whitelist" . }}
+    object_upper_limits:
+      certificate: {{ include "generic.object_upper_limits_certificate" . }}
+      l3_balancer: {{ include "generic.object_upper_limits_l3_balancer" . }}
+    preset: PR_DEFAULT
+    rps_limiter_allowed_installations: {}
+    traffic_source: {{ include "generic.traffic_source" . }}
+  sync_idm_roles: true

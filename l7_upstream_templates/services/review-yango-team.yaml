@@ -1,0 +1,24 @@
+# YANGOCLOUD-1837
+review-yango-team:
+  extends: common2tvm
+  config:
+    l7_upstream_macro:
+      headers:
+        - create:
+            target: X-Forwarded-For
+            func: realip
+        - create:
+            target: X-Client-Real-Ip
+            func: realip
+        - create:
+            target: X-Real-Ip
+            func: realip
+        - create:
+            target: X-Forwarded-Proto
+            func: scheme
+        - create:
+            target: X-Request-Id
+            func: reqid
+      flat_scheme:
+        balancer:
+          backend_timeout: 60s

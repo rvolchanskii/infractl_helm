@@ -1,0 +1,14 @@
+taxi-tc:
+  extends: common1
+  config:
+    l7_upstream_macro:
+      headers:
+        - create:
+            target: X-Real-Ip
+            func: realip
+        - create:
+            target: X-Forwarded-Host
+            func: host
+      flat_scheme:
+        balancer:
+          protocol: HTTP2

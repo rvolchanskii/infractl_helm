@@ -1,0 +1,374 @@
+infractl_namespace: aws-taxi-rtc-testing
+environment: testing
+
+number_of_pods: 3
+allocation_preset_type: NANO
+
+override_defaults:
+  object_upper_limits_certificate: 250
+  network_macro_grants:
+    - role: BILLING
+      slug: svc_quotastaxiinternational
+    - role: FW
+      slug: svc_vopstaxi
+    - role: FW
+      slug: svc_quotastaxiinternational
+
+components:
+  awacslet:
+    state: SET
+    version: 0.0.25
+  awacslet_get_workers_provider:
+    state: SET
+    version: 0.0.1
+  base_layer:
+    state: SET
+    version: xenial-1
+  endpoint_root_certs:
+    state: SET
+    version: 0.3.0
+  get_workers_provider:
+    state: REMOVED
+  instancectl:
+    state: SET
+    version: 2.114
+  instancectl_conf:
+    state: REMOVED
+  juggler_checks_bundle:
+    state: SET
+    version: 0.0.3
+  pginx_binary:
+    state: SET
+    version: 439-0
+  shawshank_layer:
+    state: SET
+    version: 0.0.9
+  unified_agent:
+    state: SET
+    version: 24.12.2
+  utility_layer:
+    state: SET
+    version: 0.0.1
+
+tvm_settings:
+  enabled: ENABLED
+  client_secret_key: client_secret
+  delegation_token: UVYvCTC1xZyMciQ_TKKvGGxM0nEnxPa0G5bBxy34X8Q=.1.e71d598a6835371d
+  secret_id: sec-01j73vvh7mn0tp7h518wsxazr4
+  secret_name: tvm.secret.2056065
+  secret_ver: ver-01j73vvh9jtaqj6q85mmq0242a
+  tvm_client_id: '2056065'
+
+balancer:
+  # Use base template from balancer_config_templates
+  config_template: generic
+
+domains:
+  test1.taxi.tst.yandex.net:
+    shadow_fqdns:
+    - test1.taxi.tst.yandex.net
+    target_fqdn: api.taxi.tst.yandex.net
+    tvm_service_ticket: '2056065'
+    l7_upstream_template: common-one-attempt
+  test11.taxi.tst.yandex.net:
+    shadow_fqdns:
+    - test11.taxi.tst.yandex.net
+    target_fqdn: api.taxi.tst.yandex.net
+    tvm_service_ticket: '2056065'
+    l7_upstream_template: common-one-attempt
+  test2.taxi.tst.yandex.net:
+    shadow_fqdns:
+    - test2.taxi.tst.yandex.net
+    target_fqdn: api.taxi.tst.yandex.net
+    tvm_service_ticket: '2056065'
+    l7_upstream_template: common-one-attempt
+  test22.taxi.tst.yandex.net:
+    shadow_fqdns:
+    - test22.taxi.tst.yandex.net
+    target_fqdn: api.taxi.tst.yandex.net
+    tvm_service_ticket: '2056065'
+    l7_upstream_template: common-one-attempt
+  api1.taxi.tst.yandex.net:
+    shadow_fqdns:
+    - api1.taxi.tst.yandex.net
+    target_fqdn: ya.ru
+    tvm_service_ticket: '2056065'
+    l7_upstream_template: common-two-attempts
+  api11.taxi.tst.yandex.net:
+    shadow_fqdns:
+    - api11.taxi.tst.yandex.net
+    target_fqdn: ya.ru
+    target_port: 442
+    tvm_service_ticket: '2056065'
+    l7_upstream_template: common-two-attempts
+  test3.taxi.tst.yandex.net:
+    shadow_fqdns:
+    - test3.taxi.tst.yandex.net
+    target_fqdn: ya.ru
+    tvm_service_ticket: '2056065'
+    l7_upstream_template: common-two-attempts-special-headers
+  test33.taxi.tst.yandex.net:
+    shadow_fqdns:
+    - test33.taxi.tst.yandex.net
+    target_fqdn: ya.ru
+    tvm_service_ticket: '2056065'
+    l7_upstream_template: common-two-attempts-special-headers
+  test4.taxi.tst.yandex.net:
+    shadow_fqdns:
+    - test4.taxi.tst.yandex.net
+    target_fqdn: ya.ru
+    tvm_service_ticket: '2056065'
+    l7_upstream_template: common2sethost
+    host_header: test5.taxi.tst.yandex.net
+  test44.taxi.tst.yandex.net:
+    shadow_fqdns:
+    - test44.taxi.tst.yandex.net
+    target_fqdn: ya.ru
+    tvm_service_ticket: '2056065'
+    l7_upstream_template: common-two-attempts-very-special-headers
+  test5.taxi.tst.yandex.net:
+    shadow_fqdns:
+    - test5.taxi.tst.yandex.net
+    target_fqdn: ya.ru
+    tvm_service_ticket: '2056065'
+    l7_upstream_template: common-two-attempts-very-special-headers-override
+  test-upstreams.taxi.tst.yandex.net:
+    upstreams:
+      - l7_upstream_template: common-one-attempt
+        target_fqdn: api.taxi.tst.yandex.net
+        tvm_service_ticket: '2056065'
+      - l7_upstream_template: common-two-attempts
+        target_fqdn: ya.ru
+        tvm_service_ticket: '2056065'
+      - l7_upstream_template: common-two-attempts
+        target_fqdn: ya.ru
+        target_port: 442
+        tvm_service_ticket: '2056065'
+      - l7_upstream_template: common-two-attempts
+        target_fqdn: upstreams.ya.ru
+        target_port: 442
+        tvm_service_ticket: '2056065'
+      - l7_upstream_template: common-two-attempts
+        target_fqdn: upstreams.ya.ru
+        target_port: 8080
+        tvm_service_ticket: '2056065'
+    shadow_fqdns:
+      - test1-upstreams.taxi.tst.yandex.net
+      - test2-upstreams.taxi.tst.yandex.net
+  customtest1.taxi.tst.yandex.net:
+    shadow_fqdns:
+    - customtest1.taxi.tst.yandex.net
+    target_fqdn: api.taxi.tst.yandex.net
+    target_port: 80
+    l7_upstream_config:
+      l7_upstream_macro:
+        version: 0.3.9
+        matcher:
+          any: true
+        headers:
+        - create:
+            target: X-Real-IP
+            func: realip
+        flat_scheme:
+          balancer:
+            protocol: HTTP2
+            health_indicators_preset: DISABLE_PASSIVE_AND_SD_CHECKS
+            allow_retries_to_same_instance: true
+            attempts: 1
+            fast_attempts: 2
+            max_reattempts_share: 0.15
+            max_pessimized_endpoints_share: 0.2
+            do_not_retry_http_responses: true
+            backend_timeout: 60s
+            connect_timeout: 1s
+            use_https_to_endpoints:
+              disable_sni: false
+            keepalive_count: 100
+          on_error:
+            static:
+              status: 504
+              content: Service unavailable
+  customtest2.taxi.tst.yandex.net:
+    shadow_fqdns:
+    - customtest2.taxi.tst.yandex.net
+    target_fqdn: api.taxi.tst.yandex.net
+    l7_upstream_config:
+      l7_upstream_macro:
+        version: 0.3.9
+        matcher:
+          any: true
+        headers:
+        - create:
+            target: X-Real-IP
+            func: realip
+        flat_scheme:
+          balancer:
+            protocol: HTTP2
+            health_indicators_preset: DISABLE_PASSIVE_AND_SD_CHECKS
+            allow_retries_to_same_instance: true
+            attempts: 1
+            fast_attempts: 2
+            max_reattempts_share: 0.15
+            max_pessimized_endpoints_share: 0.2
+            do_not_retry_http_responses: true
+            backend_timeout: 60s
+            connect_timeout: 1s
+            use_https_to_endpoints:
+              disable_sni: false
+            keepalive_count: 100
+          on_error:
+            static:
+              status: 504
+              content: Service unavailable
+  customtest3.taxi.tst.yandex.net:
+    target_fqdn: api.taxi.tst.yandex.net
+    shadow_fqdns:
+    - customtest3.taxi.tst.yandex.net
+    l7_upstream_config:
+      l7_upstream_macro:
+        version: 0.3.9
+        matcher:
+          any: true
+        headers:
+        - create:
+            target: X-Real-IP
+            func: realip
+        flat_scheme:
+          balancer:
+            protocol: HTTP2
+            health_indicators_preset: DISABLE_PASSIVE_AND_SD_CHECKS
+            allow_retries_to_same_instance: true
+            attempts: 3
+            fast_attempts: 2
+            max_reattempts_share: 0.15
+            max_pessimized_endpoints_share: 0.2
+            do_not_retry_http_responses: true
+            backend_timeout: 60s
+            connect_timeout: 1s
+            use_https_to_endpoints:
+              disable_sni: false
+            keepalive_count: 100
+          on_error:
+            static:
+              status: 504
+              content: Service unavailable
+l7_upstream_templates:
+  generic:
+    config:
+      l7_upstream_macro:
+        version: 0.3.19
+        monitoring:
+          per_backend_signals:
+            enabled: true
+  common-one-attempt:
+    extends: generic
+    config:
+      l7_upstream_macro:
+        matcher:
+          any: true
+        headers:
+        - create:
+            target: X-Real-IP
+            func: realip
+        - create:
+            target: X-Balancer-Tvm-Service-Ticket
+            func: tvm_service_ticket:{{ .tvm_service_ticket }}
+        flat_scheme:
+          balancer:
+            allow_retries_to_same_instance: true
+            attempts: 1
+            backend_timeout: 10s
+            connect_timeout: 1s
+            do_not_retry_http_responses: true
+            fast_attempts: 2
+            health_indicators_preset: DISABLE_PASSIVE_AND_SD_CHECKS
+            keepalive_count: 100
+            max_pessimized_endpoints_share: 0.2
+            max_reattempts_share: 0.15
+            retry_non_idempotent: false
+            use_https_to_endpoints:
+              disable_sni: false
+          on_error:
+            static:
+              content: Service unavailable
+              status: 504
+  common-two-attempts:
+    extends: common-one-attempt
+    config:
+      l7_upstream_macro:
+        headers:
+        - create:
+            target: X-Ya-Header1
+            value: asdqwe1
+        flat_scheme:
+          balancer:
+            attempts: 2
+  common-two-attempts-special-headers:
+    extends: common-two-attempts
+    config:
+      l7_upstream_macro:
+        headers:
+        - create:
+            target: X-Ya-Header2
+            value: asdqwe2
+  common-two-attempts-very-special-headers:
+    extends: common-two-attempts-special-headers
+    config:
+      l7_upstream_macro:
+        headers:
+        - create:
+            target: X-Ya-Header3
+            value: asdqwe3
+  common-two-attempts-very-special-headers-override:
+    extends: common-two-attempts-special-headers
+    config:
+      l7_upstream_macro:
+        headers:
+        - create:
+            target: X-Ya-Header2
+            value: 123qwe
+  common2sethost:
+    extends: common-two-attempts-very-special-headers-override
+    config:
+      l7_upstream_macro:
+        headers:
+        - create:
+            target: Host
+            value: '{{ .host_header }}'
+
+balancer_config_templates:
+  generic:
+    config:
+      l7_macro:
+        announce_check_reply:
+          url_re: /ext_ping
+        health_check_reply: {}
+        http:
+          redirect_to_https:
+            permanent: true
+        https:
+          tls_settings:
+            preset: STRONG
+          enable_http2: true
+        include_domains: {}
+        version: 0.17.0
+  custom-version:
+    extends: generic
+    config:
+      l7_macro:
+        version: 0.18.0
+  with-extra-domain:
+    extends: custom-version
+    config:
+      l7_macro:
+        include_domains:
+          foo.test: {}
+  webauth-rate-limit:
+    extends: generic
+    config:
+      l7_macro:
+        rps_limiter:
+          local:
+            interval: 1s
+            max_requests: 100
+            max_requests_in_queue: 100

@@ -1,0 +1,450 @@
+{
+    "$schema": "https://json-schema.org/schema#",
+    "title": "Generic Awacs Proxy Chart values",
+    "type": "object",
+    "properties": {
+        "infractl_namespace": {
+            "type": "string"
+        },
+        "environment": {
+            "type": "string"
+        },
+        "number_of_pods": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 50
+        },
+        "allocation_preset_type": {
+            "type": "string"
+        },
+        "override_defaults": {
+            "type": "object",
+            "properties": {
+                "object_upper_limits_certificate": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "awacs_namespace_name": {
+                    "type": "string"
+                },
+                "category": {
+                    "type": "string"
+                },
+                "ctl_version": {
+                    "type": [
+                        "integer",
+                        "string"
+                    ]
+                },
+                "mode": {
+                    "type": "string"
+                },
+                "monitoringType": {
+                    "type": "string"
+                },
+                "quota_abc": {
+                    "type": [
+                        "string",
+                        "integer"
+                    ]
+                },
+                "l7_balancer_dc": {
+                    "type": "string"
+                },
+                "l7_balancer_location": {
+                    "type": "string"
+                },
+                "l7_balancer_id": {
+                    "type": "string"
+                },
+                "l7_balancer_service_id": {
+                    "type": "string"
+                },
+                "deploy_project": {
+                    "type": "string"
+                },
+                "monitoring_project": {
+                    "type": "string"
+                },
+                "traffic_source": {
+                    "type": "string"
+                },
+                "l7_balancer_name": {
+                    "type": "string"
+                },
+                "object_upper_limits_l3_balancer": {
+                    "type": "integer"
+                },
+                "location": {
+                    "type": "object",
+                    "properties": {
+                        "node_segment": {
+                            "type": "string"
+                        },
+                        "city": {
+                            "type": "string"
+                        },
+                        "country": {
+                            "type": "string"
+                        },
+                        "country_code": {
+                            "type": "string"
+                        },
+                        "provider": {
+                            "type": "string"
+                        },
+                        "yp_cluster": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "availability_zones_count": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "nodes_count": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "max_unavailable_pods": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "min_update_delay_seconds": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "network_macro": {
+                    "type": "string",
+                    "pattern": "^_[A-Z0-9_]+_$"
+                },
+                "request_puncher_rules": {
+                    "type": "boolean"
+                },
+                "abc_service_slug": {
+                    "type": "string"
+                },
+                "certificate_ca": {
+                    "type": "string",
+                    "enum": [
+                        "INTERNAL_CA",
+                        "GLOBAL_SIGN_PRODUCTION_CA",
+                        "GLOBAL_SIGN_DV_PRODUCTION_CA"
+                    ]
+                },
+                "parent_network_macro_name": {
+                    "type": "string"
+                },
+                "network_macro_grants": {
+                    "oneOf": [
+                        {
+                            "type": "null"
+                        },
+                        {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "role": {
+                                        "type": "string"
+                                    },
+                                    "slug": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "role",
+                                    "slug"
+                                ],
+                                "additionalProperties": false
+                            },
+                            "allOf": [
+                                {
+                                    "contains": {
+                                        "type": "object",
+                                        "properties": {
+                                            "role": {
+                                                "const": "FW"
+                                            }
+                                        },
+                                        "required": [
+                                            "role"
+                                        ]
+                                    },
+                                    "minContains": 1
+                                },
+                                {
+                                    "contains": {
+                                        "type": "object",
+                                        "properties": {
+                                            "role": {
+                                                "const": "BILLING"
+                                            }
+                                        },
+                                        "required": [
+                                            "role"
+                                        ]
+                                    },
+                                    "minContains": 1,
+                                    "maxContains": 1
+                                }
+                            ]
+                        }
+                    ]
+                },
+                "node_max_pods": {
+                    "type": "integer"
+                },
+                "rack_max_pods": {
+                    "type": "integer"
+                },
+                "antirobot_service": {
+                    "type": "string"
+                },
+                "antirobot_req_group": {
+                    "type": "string"
+                }
+            }
+        },
+        "components": {
+            "type": "object",
+            "additionalProperties": {
+                "type": "object",
+                "properties": {
+                    "state": {
+                        "type": "string"
+                    },
+                    "version": {
+                        "type": [
+                            "string",
+                            "number"
+                        ]
+                    }
+                }
+            }
+        },
+        "tvm_settings": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "string"
+                },
+                "client_secret_key": {
+                    "type": "string"
+                },
+                "delegation_token": {
+                    "type": "string"
+                },
+                "secret_id": {
+                    "type": "string"
+                },
+                "secret_name": {
+                    "type": "string"
+                },
+                "secret_ver": {
+                    "type": "string"
+                },
+                "tvm_client_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "balancer": {
+            "type": "object",
+            "properties": {
+                "config": {
+                    "type": "object",
+                    "properties": {
+                        "l7_macro": {
+                            "type": "object",
+                            "properties": {
+                                "announce_check_reply": {
+                                    "type": "object",
+                                    "properties": {
+                                        "url_re": {
+                                            "type": "string"
+                                        }
+                                    }
+                                },
+                                "health_check_reply": {
+                                    "type": "object"
+                                },
+                                "http": {
+                                    "type": "object",
+                                    "properties": {
+                                        "redirect_to_https": {
+                                            "type": "object",
+                                            "properties": {
+                                                "permanent": {
+                                                    "type": "boolean"
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "https": {
+                                    "type": "object"
+                                },
+                                "include_domains": {
+                                    "type": "object"
+                                },
+                                "version": {
+                                    "type": [
+                                        "string",
+                                        "number"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "config_template": {
+                    "type": "string"
+                }
+            }
+        },
+        "domains": {
+            "type": "object",
+            "additionalProperties": {
+                "type": "object",
+                "properties": {
+                    "shadow_fqdns": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "target_fqdn": {
+                        "type": "string"
+                    },
+                    "target_port": {
+                        "type": "integer"
+                    },
+                    "tvm_service_ticket": {
+                        "type": "string"
+                    },
+                    "order": {
+                        "type": [
+                            "string",
+                            "integer"
+                        ]
+                    },
+                    "l7_upstream_template": {
+                        "type": "string"
+                    },
+                    "l7_upstream_config": {
+                        "type": "object"
+                    },
+                    "upstreams": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "allOf": [
+                                { "required": ["l7_upstream_template"] }
+                            ],
+                            "properties": {
+                                "l7_upstream_template": { "type": "string" },
+                                "target_fqdn": { "type": "string" },
+                                "target_port": { "type": "integer" },
+                                "tvm_service_ticket": { "type": "string" },
+                                "host_header": { "type": "string" }
+                            }
+                        }
+                    },
+                    "host_header": {
+                        "type": "string"
+                    },
+                    "request_puncher_rules": {
+                        "type": "boolean"
+                    },
+                    "certificate_ca": {
+                        "$ref": "#/properties/override_defaults/properties/certificate_ca"
+                    },
+                    "certificate_abc_service_id": {
+                        "type": "string"
+                    },
+                    "certificate_public_key_algorithm_id": {
+                        "type": "string"
+                    },
+                    "cert_ref_id": {
+                        "type": "string"
+                    }
+                },
+                "allOf": [
+                    {
+                        "anyOf": [
+                            { "required": ["l7_upstream_template"] },
+                            { "required": ["l7_upstream_config"] },
+                            { "required": ["upstreams"]}
+                        ]
+                    },
+                    {
+                        "if": {
+                            "properties": {
+                                "l7_upstream_template": {
+                                    "type": "string",
+                                    "pattern": "sethost"
+                                }
+                            },
+                            "required": ["l7_upstream_template"]
+                        },
+                        "then": {
+                            "required": ["host_header"]
+                        }
+                    },
+                    {
+                        "if": {
+                            "properties": {
+                                "l7_upstream_template": {
+                                    "type": "string",
+                                    "pattern": "tvm"
+                                }
+                            },
+                            "required": ["l7_upstream_template"]
+                        },
+                        "then": {
+                            "required": ["tvm_service_ticket"]
+                        }
+                    },
+                    {
+                        "not": {
+                            "anyOf": [
+                                { "required": ["cert_ref_id", "certificate_ca"] },
+                                { "required": ["cert_ref_id", "certificate_abc_service_id"] },
+                                { "required": ["cert_ref_id", "certificate_public_key_algorithm_id"] }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "balancer_config_templates": {
+            "type": "object",
+            "additionalProperties": {
+                "type": "object",
+                "properties": {
+                    "extends": {
+                        "type": "string"
+                    },
+                    "config": {
+                        "type": "object"
+                    }
+                }
+            }
+        },
+        "l7_upstream_templates": {
+            "type": "object",
+            "additionalProperties": {
+                "type": "object",
+                "properties": {
+                    "extends": {
+                        "type": "string"
+                    },
+                    "config": {
+                        "type": "object"
+                    }
+                }
+            }
+        }
+    }
+}

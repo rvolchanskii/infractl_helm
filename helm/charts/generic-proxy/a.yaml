@@ -1,0 +1,40 @@
+service: experimental_projects_team
+title: AWS deployment config for Yango (infractl_helm)
+
+ci:
+  permissions:
+    start-flow:
+      - service: experimental_projects_team
+        scope: administration
+
+  secret: sec-01jwe6ap1j949h6xft66rqj86b
+  runtime:
+    sandbox:
+      owner: TAXI-WORLD
+    tasklet:
+      account_name: /root/generic/quotastaxiinternational
+      requirements:
+        container:
+          network:
+            name: _TASKLETS_SERVICE_TAXI_WORLD_NETS_
+  actions:
+    helm-unittest:
+      title: Run helm unittest
+      flow: helm-unittest-flow
+      triggers:
+        - on: pr
+          filters:
+            - sub-paths: ["**"]
+  flows:
+    helm-unittest-flow:
+      jobs:
+        unittest:
+          title: unittest
+          task: projects/taxi/world/helm_infractl_command_runner_unittest
+          input:
+            arc_token:
+              id: sec-01jwe6ap1j949h6xft66rqj86b
+              key: arc.token
+            helm_infractl_path:
+              path: taxi/yango/infractl_helm/
+          needs-type: all

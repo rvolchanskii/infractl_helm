@@ -1,0 +1,68 @@
+suite: puncher ruleset generation
+release:
+  name: release-name
+values:
+  - ../values-example.yaml
+templates:
+  - templates/PuncherRuleSetProxyToLB.yaml
+tests:
+  - it: should render exactly 6 unique puncher rulesets
+    asserts:
+      - hasDocuments:
+          count: 6
+  - it: ruleset for api.taxi.tst.yandex.net:443 exists once
+    documentSelector:
+      path: metadata.name
+      value: api-taxi-tst-yandex-net-443-90b19a18
+    asserts:
+      - hasDocuments:
+          count: 1
+          filterAware: true
+      - equal:
+          path: spec.rules.proxy-to-l3.spec.ports
+          value: "443"
+      - contains:
+          path: spec.rules.proxy-to-l3.spec.destinations
+          content: api.taxi.tst.yandex.net
+  - it: ruleset for ya.ru:443 exists once
+    documentSelector:
+      path: metadata.name
+      value: ya-ru-443-90b19a18
+    asserts:
+      - hasDocuments:
+          count: 1
+          filterAware: true
+      - equal:
+          path: spec.rules.proxy-to-l3.spec.ports
+          value: "443"
+      - contains:
+          path: spec.rules.proxy-to-l3.spec.destinations
+          content: ya.ru
+  - it: ruleset for ya.ru:442 exists once
+    documentSelector:
+      path: metadata.name
+      value: ya-ru-442-90b19a18
+    asserts:
+      - hasDocuments:
+          count: 1
+          filterAware: true
+      - equal:
+          path: spec.rules.proxy-to-l3.spec.ports
+          value: "442"
+      - contains:
+          path: spec.rules.proxy-to-l3.spec.destinations
+          content: ya.ru
+  - it: ruleset for api.taxi.tst.yandex.net:80 exists once
+    documentSelector:
+      path: metadata.name
+      value: api-taxi-tst-yandex-net-80-90b19a18
+    asserts:
+      - hasDocuments:
+          count: 1
+          filterAware: true
+      - equal:
+          path: spec.rules.proxy-to-l3.spec.ports
+          value: "80"
+      - contains:
+          path: spec.rules.proxy-to-l3.spec.destinations
+          content: api.taxi.tst.yandex.net
