@@ -1,0 +1,41 @@
+passport:
+  extends: common1tvm
+  config:
+    l7_upstream_macro:
+      headers:
+      - create:
+          target: X-Yandex-Akamai
+          func: akamai
+      - create:
+          target: X-Real-Scheme
+          func: scheme
+      - create:
+          target: X-Yandex-Ja3
+          func: ja3
+      - create:
+          target: X-YProxy-Yandex-Ja3
+          func: ja3
+      - create:
+          target: X-Real-Ip
+          func: realip
+      - create:
+          target: X-YProxy-Header-Ip
+          func: realip
+      - create:
+          target: X-YProxy-Header-Port
+          func: realport
+      - create:
+          target: X-Yandex-HTTPS-Info
+          func: ssl_handshake_info
+      - create:
+          target: X-Yandex-TCP-Info
+          func: tcp_info
+      - create:
+          target: X-Request-Id
+          func: reqid
+      - copy:
+          target: X-Forwarded-Y-Host
+          source: Host
+      - create:
+          target: Host
+          value: "{{ .host_header }}"

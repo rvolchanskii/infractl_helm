@@ -2,6 +2,52 @@
     "$schema": "https://json-schema.org/schema#",
     "title": "Generic Awacs Proxy Chart values",
     "type": "object",
+    "allOf": [
+        {
+            "if": {
+                "properties": {
+                    "allocation_type": {
+                        "const": "AWACS"
+                    }
+                },
+                "required": [
+                    "allocation_type"
+                ]
+            },
+            "then": {
+                "required": [
+                    "awacs_allocation"
+                ],
+                "not": {
+                    "required": [
+                        "allocation_preset_type"
+                    ]
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "allocation_type": {
+                        "const": "PRESET"
+                    }
+                },
+                "required": [
+                    "allocation_type"
+                ]
+            },
+            "then": {
+                "required": [
+                    "allocation_preset_type"
+                ],
+                "not": {
+                    "required": [
+                        "awacs_allocation"
+                    ]
+                }
+            }
+        }
+    ],
     "properties": {
         "infractl_namespace": {
             "type": "string"
@@ -29,50 +75,6 @@
             "properties": {
                 "pod_spec": {
                     "type": "object",
-                    "properties": {
-                        "vcpu_guarantee": {
-                            "type": "integer"
-                        },
-                        "vcpu_limit": {
-                            "type": "integer"
-                        },
-                        "memory_guarantee": {
-                            "type": "integer"
-                        },
-                        "main_volume": {
-                            "type": "object",
-                            "properties": {
-                                "storage_type": {
-                                    "type": "string"
-                                },
-                                "size": {
-                                    "type": "integer"
-                                }
-                            }
-                        },
-                        "log_volume": {
-                            "type": "object",
-                            "properties": {
-                                "storage_type": {
-                                    "type": "string"
-                                },
-                                "size": {
-                                    "type": "integer"
-                                }
-                            }
-                        },
-                        "cache_volume": {
-                            "type": "object",
-                            "properties": {
-                                "storage_type": {
-                                    "type": "string"
-                                },
-                                "size": {
-                                    "type": "integer"
-                                }
-                            }
-                        }
-                    },
                     "additionalProperties": true
                 }
             }

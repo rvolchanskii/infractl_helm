@@ -1,0 +1,12 @@
+# YANGOCLOUD-2738
+fleet-web:
+  extends: common1tvm
+  config:
+    l7_upstream_macro:
+      headers:
+        - copy:
+            target: X-Forwarded-Y-Host
+            source: Host
+        - create:
+            target: Host
+            value: "{{ .host_header }}"
