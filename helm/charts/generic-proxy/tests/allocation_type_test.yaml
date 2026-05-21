@@ -1,14 +1,35 @@
 suite: allocation type rendering
 release:
   name: release-name
-values:
-  - ../values-example.yaml
 templates:
   - templates/AwacsNamespace.yaml
 tests:
   - it: renders AWACS allocation when allocation_type is AWACS
     set:
+      infractl_namespace: test-ns
+      environment: testing
+      number_of_pods: 3
+      override_defaults:
+        awacs_namespace_name: test-ns
       allocation_type: AWACS
+      awacs_allocation:
+        pod_spec:
+          vcpu_guarantee: 500
+          vcpu_limit: 500
+          memory_guarantee: 1536
+          main_volume:
+            storage_type: SSD
+            size: 128
+            bandwidth_guarantee: 1
+          log_volume:
+            storage_type: SSD
+            size: 128
+            bandwidth_guarantee: 1
+          cache_volume:
+            storage_type: SSD
+            size: 128
+            bandwidth_guarantee: 1
+          network_bandwidth_guarantee: 1
     asserts:
       - equal:
           path: spec.namespace_spec.allocation.allocation_type
@@ -20,7 +41,12 @@ tests:
 
   - it: renders PRESET allocation by default when allocation_type is not specified
     set:
-      allocation_type: null
+      infractl_namespace: test-ns
+      environment: testing
+      number_of_pods: 3
+      override_defaults:
+        awacs_namespace_name: test-ns
+      allocation_preset_type: CPU_100_RAM_1G
     asserts:
       - equal:
           path: spec.namespace_spec.allocation.allocation_type
@@ -32,7 +58,13 @@ tests:
 
   - it: renders PRESET allocation when allocation_type is PRESET
     set:
+      infractl_namespace: test-ns
+      environment: testing
+      number_of_pods: 3
+      override_defaults:
+        awacs_namespace_name: test-ns
       allocation_type: PRESET
+      allocation_preset_type: CPU_100_RAM_1G
     asserts:
       - equal:
           path: spec.namespace_spec.allocation.allocation_type
