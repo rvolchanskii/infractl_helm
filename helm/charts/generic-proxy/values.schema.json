@@ -17,6 +17,66 @@
         "allocation_preset_type": {
             "type": "string"
         },
+        "allocation_type": {
+            "type": "string",
+            "enum": [
+                "PRESET",
+                "AWACS"
+            ]
+        },
+        "awacs_allocation": {
+            "type": "object",
+            "properties": {
+                "pod_spec": {
+                    "type": "object",
+                    "properties": {
+                        "vcpu_guarantee": {
+                            "type": "integer"
+                        },
+                        "vcpu_limit": {
+                            "type": "integer"
+                        },
+                        "memory_guarantee": {
+                            "type": "integer"
+                        },
+                        "main_volume": {
+                            "type": "object",
+                            "properties": {
+                                "storage_type": {
+                                    "type": "string"
+                                },
+                                "size": {
+                                    "type": "integer"
+                                }
+                            }
+                        },
+                        "log_volume": {
+                            "type": "object",
+                            "properties": {
+                                "storage_type": {
+                                    "type": "string"
+                                },
+                                "size": {
+                                    "type": "integer"
+                                }
+                            }
+                        },
+                        "cache_volume": {
+                            "type": "object",
+                            "properties": {
+                                "storage_type": {
+                                    "type": "string"
+                                },
+                                "size": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    },
+                    "additionalProperties": true
+                }
+            }
+        },
         "override_defaults": {
             "type": "object",
             "properties": {

@@ -13,27 +13,37 @@ spec:
   description: {{ dig "balancer" "description" $namespace_name (.Values | merge (dict)) }}
   namespace_spec:
     allocation:
-      allocation_type: PRESET
+      {{- $allocationType := default "PRESET" .Values.allocation_type }}
+      allocation_type: {{ $allocationType }}
       quota_abc: {{ default "42038" .Values.override_defaults.quota_abc }} {{/* quotastaxiaws */}}
+      {{- if eq $allocationType "AWACS" }}
+      awacs_allocation:
+        pod_spec:
+          network_macro: {{ include "generic.network_macro" . }}
+          {{- with .Values.awacs_allocation.pod_spec }}
+          {{- toYaml (omit . "network_macro") | nindent 10 }}
+          {{- end }}
+      {{- else }}
       preset_allocation:
         allocation_request:
           network_macro: {{ include "generic.network_macro" . }}
           preset:
             storage_type: SSD
             type: {{ .Values.allocation_preset_type }}
-        per_balancer_settings:
-        - balancer_id: {{ include "generic.l7_balancer_id" . }}
-          env: L7_ENV_{{ .Values.environment | upper }}
-          location: {{ include "generic.l7_balancer_dc" . }}
-          pods: {{ .Values.number_of_pods }}
-        {{- $antiaffinity_constraints := include "generic.antiaffinity_constraints" . | fromYaml }}
-        antiaffinity_constraints:
-          node_max_pods: {{ $antiaffinity_constraints.node_max_pods }}
-          rack_max_pods: {{ $antiaffinity_constraints.rack_max_pods }}
-        degrade_params:
-        {{- $degrade_params := include "generic.degrade_params" . | fromYaml }}
-          max_unavailable_pods: {{ $degrade_params.max_unavailable_pods }}
-          min_update_delay_seconds: {{ $degrade_params.min_update_delay_seconds }}
+      {{- end }}
+      per_balancer_settings:
+      - balancer_id: {{ include "generic.l7_balancer_id" . }}
+        env: L7_ENV_{{ .Values.environment | upper }}
+        location: {{ include "generic.l7_balancer_dc" . }}
+        pods: {{ .Values.number_of_pods }}
+      {{- $antiaffinity_constraints := include "generic.antiaffinity_constraints" . | fromYaml }}
+      antiaffinity_constraints:
+        node_max_pods: {{ $antiaffinity_constraints.node_max_pods }}
+        rack_max_pods: {{ $antiaffinity_constraints.rack_max_pods }}
+      degrade_params:
+      {{- $degrade_params := include "generic.degrade_params" . | fromYaml }}
+        max_unavailable_pods: {{ $degrade_params.max_unavailable_pods }}
+        min_update_delay_seconds: {{ $degrade_params.min_update_delay_seconds }}
     balancer_constraints:
       instance_tags:
         prj: {{ $namespace_name }}

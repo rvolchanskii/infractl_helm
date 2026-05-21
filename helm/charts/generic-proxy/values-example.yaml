@@ -2,7 +2,22 @@ infractl_namespace: aws-taxi-rtc-testing
 environment: testing
 
 number_of_pods: 3
+allocation_type: PRESET
 allocation_preset_type: NANO
+awacs_allocation:
+  pod_spec:
+    vcpu_guarantee: 1000
+    vcpu_limit: 1000
+    memory_guarantee: 1024
+    main_volume:
+      storage_type: SSD
+      size: 10240
+    log_volume:
+      storage_type: SSD
+      size: 10240
+    cache_volume:
+      storage_type: SSD
+      size: 10240
 
 override_defaults:
   object_upper_limits_certificate: 250
