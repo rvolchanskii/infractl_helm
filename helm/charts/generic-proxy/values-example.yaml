@@ -5,25 +5,25 @@ number_of_pods: 3
 allocation_type: AWACS
 awacs_allocation:
   pod_spec:
-    vcpu_guarantee: 1000
-    vcpu_limit: 1000
+    vcpu_guarantee: 500
+    vcpu_limit: 500
     memory_guarantee: 1536
     main_volume:
       storage_type: SSD
-      size: 10240
-      bandwidth_guarantee: 1
-      bandwidth_limit: 1
+      size: 512
+      bandwidth_guarantee: 5
+      bandwidth_limit: 5
     log_volume:
       storage_type: SSD
       size: 10240
-      bandwidth_guarantee: 1
-      bandwidth_limit: 1
+      bandwidth_guarantee: 9
+      bandwidth_limit: 24
     cache_volume:
       storage_type: SSD
-      size: 10240
+      size: 128
       bandwidth_guarantee: 1
       bandwidth_limit: 1
-    network_bandwidth_guarantee: 1
+    network_bandwidth_guarantee: 10
 
 override_defaults:
   object_upper_limits_certificate: 250

@@ -75,7 +75,109 @@
             "properties": {
                 "pod_spec": {
                     "type": "object",
-                    "additionalProperties": true
+                    "additionalProperties": true,
+                    "required": [
+                        "vcpu_guarantee",
+                        "vcpu_limit",
+                        "memory_guarantee",
+                        "main_volume",
+                        "log_volume",
+                        "cache_volume",
+                        "network_bandwidth_guarantee"
+                    ],
+                    "properties": {
+                        "vcpu_guarantee": {
+                            "type": "integer",
+                            "minimum": 1
+                        },
+                        "vcpu_limit": {
+                            "type": "integer",
+                            "minimum": 1
+                        },
+                        "memory_guarantee": {
+                            "type": "integer",
+                            "minimum": 1536
+                        },
+                        "main_volume": {
+                            "type": "object",
+                            "additionalProperties": true,
+                            "required": [
+                                "storage_type",
+                                "size",
+                                "bandwidth_guarantee"
+                            ],
+                            "properties": {
+                                "storage_type": {
+                                    "type": "string",
+                                    "enum": [
+                                        "HDD", "SSD"
+                                    ]
+                                },
+                                "size": {
+                                    "type": "integer",
+                                    "minimum": 1
+                                },
+                                "bandwidth_guarantee": {
+                                    "type": "integer",
+                                    "minimum": 1
+                                }
+                            }
+                        },
+                        "log_volume": {
+                            "type": "object",
+                            "additionalProperties": true,
+                            "required": [
+                                "storage_type",
+                                "size",
+                                "bandwidth_guarantee"
+                            ],
+                            "properties": {
+                                "storage_type": {
+                                    "type": "string",
+                                    "enum": [
+                                        "HDD", "SSD"
+                                    ]
+                                },
+                                "size": {
+                                    "type": "integer",
+                                    "minimum": 1
+                                },
+                                "bandwidth_guarantee": {
+                                    "type": "integer",
+                                    "minimum": 1
+                                }
+                            }
+                        },
+                        "cache_volume": {
+                            "type": "object",
+                            "additionalProperties": true,
+                            "required": [
+                                "storage_type",
+                                "size",
+                                "bandwidth_guarantee"
+                            ],
+                            "properties": {
+                                "storage_type": {
+                                    "type": "string",
+                                    "enum": [
+                                        "HDD", "SSD"
+                                    ]
+                                },
+                                "size": {
+                                    "type": "integer",
+                                    "minimum": 1
+                                },
+                                "bandwidth_guarantee": {
+                                    "type": "integer",
+                                    "minimum": 1
+                                }
+                            }
+                        },
+                        "network_bandwidth_guarantee": {
+                            "type": "integer",
+                            "minimum": 1
+                        }
+                    }
                 }
             }
         },
