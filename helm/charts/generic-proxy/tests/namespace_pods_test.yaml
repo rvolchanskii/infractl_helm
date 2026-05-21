@@ -9,10 +9,10 @@ tests:
   - it: default calculation
     asserts:
       - equal:
-          path: spec.namespace_spec.allocation.preset_allocation.antiaffinity_constraints.node_max_pods
+          path: spec.namespace_spec.allocation.awacs_allocation.antiaffinity_constraints.node_max_pods
           value: 1
       - equal:
-          path: spec.namespace_spec.allocation.preset_allocation.antiaffinity_constraints.rack_max_pods
+          path: spec.namespace_spec.allocation.awacs_allocation.antiaffinity_constraints.rack_max_pods
           value: 1
   - it: custom calculation
     set:
@@ -21,10 +21,10 @@ tests:
       override_defaults.availability_zones_count: 3
     asserts:
       - equal:
-          path: spec.namespace_spec.allocation.preset_allocation.antiaffinity_constraints.node_max_pods
+          path: spec.namespace_spec.allocation.awacs_allocation.antiaffinity_constraints.node_max_pods
           value: 4
       - equal:
-          path: spec.namespace_spec.allocation.preset_allocation.antiaffinity_constraints.rack_max_pods
+          path: spec.namespace_spec.allocation.awacs_allocation.antiaffinity_constraints.rack_max_pods
           value: 4
   - it: custom calculation with uneven number of pods
     set:
@@ -33,18 +33,18 @@ tests:
       override_defaults.availability_zones_count: 5
     asserts:
       - equal:
-          path: spec.namespace_spec.allocation.preset_allocation.antiaffinity_constraints.node_max_pods
+          path: spec.namespace_spec.allocation.awacs_allocation.antiaffinity_constraints.node_max_pods
           value: 2
       - equal:
-          path: spec.namespace_spec.allocation.preset_allocation.antiaffinity_constraints.rack_max_pods
+          path: spec.namespace_spec.allocation.awacs_allocation.antiaffinity_constraints.rack_max_pods
           value: 3
   - it: default degrade params
     asserts:
       - equal:
-          path: spec.namespace_spec.allocation.preset_allocation.degrade_params.max_unavailable_pods
+          path: spec.namespace_spec.allocation.awacs_allocation.degrade_params.max_unavailable_pods
           value: 1
       - equal:
-          path: spec.namespace_spec.allocation.preset_allocation.degrade_params.min_update_delay_seconds
+          path: spec.namespace_spec.allocation.awacs_allocation.degrade_params.min_update_delay_seconds
           value: 300
   - it: override degrade params
     set:
@@ -52,8 +52,8 @@ tests:
       override_defaults.min_update_delay_seconds: 100
     asserts:
       - equal:
-          path: spec.namespace_spec.allocation.preset_allocation.degrade_params.max_unavailable_pods
+          path: spec.namespace_spec.allocation.awacs_allocation.degrade_params.max_unavailable_pods
           value: 5
       - equal:
-          path: spec.namespace_spec.allocation.preset_allocation.degrade_params.min_update_delay_seconds
+          path: spec.namespace_spec.allocation.awacs_allocation.degrade_params.min_update_delay_seconds
           value: 100

@@ -14,7 +14,7 @@ tests:
           value: aws-rtc-taxi-release-name-balancer-testing-nets
         template: templates/NetworkMacro.yaml
       - equal:
-          path: spec.namespace_spec.allocation.preset_allocation.allocation_request.network_macro
+          path: spec.namespace_spec.allocation.awacs_allocation.pod_spec.network_macro
           value: _AWS_RTC_TAXI_RELEASE_NAME_BALANCER_TESTING_NETS_
         template: templates/AwacsNamespace.yaml
       - equal:
